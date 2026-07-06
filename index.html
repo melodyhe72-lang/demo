@@ -1,28 +1,560 @@
-<html>
-  <head>
-    <title>BeanShell scripting example</title>
-    <script type="text/javascript" src="http://github.com/vic/jwmscript/tree/master/core/src/main/resources/com/jwmsolutions/jwmscript/applet.js?raw=true"></script>
-    <script type="text/javascript">
-      JWMScript({
-        archive: "http://github.com/vborja/jwmscript-example/tree/master/signed/jwmscript-core-0.0.1.jar?raw=true",
-        types  : ["text/java", "text/beanshell"],
-        setup  : function(scripting) {
-          alert("Setting up JWMScript");
-          scripting.addClassPath("http://github.com/vborja/jwmscript-example/tree/master/signed/bsh-2.0b4.jar?raw=true");
-          var interpreter = scripting.wrapClass("bsh.Interpreter").newInstance();
-          interpreter.set("jwmscript", scripting.getHandle());
-          return function(script) { interpreter.eval(script.innerHTML); };
-        }
-      });
-    </script>
-    <script type="text/beanshell">
-      jwmscript.alert( "Hello from BeanShell" );
-    </script>
-  </head>
-  <body>
-    <h1>Hello World example scripted with BeanShell</h1>
-    <p>
-      <a href="http://beanshell.org">BeanShell</a> is an scripting language.
-    </p>
-  </body>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>热量小票 · AI 食物识别</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --desk:#1E3934;
+    --desk-dark:#152925;
+    --paper:#F3EEDD;
+    --paper-shadow:#e2dbc2;
+    --ink:#2B241C;
+    --ink-soft:#5b5346;
+    --stamp:#B23A2E;
+    --mustard:#E3A73B;
+    --success:#4B7A5C;
+    --line:#c9c0aa;
+    --mono: 'Space Mono', 'Courier New', monospace;
+    --sans: 'Inter', -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    min-height:100vh;
+    background:
+      repeating-linear-gradient(135deg, rgba(255,255,255,0.02) 0 2px, transparent 2px 40px),
+      radial-gradient(ellipse at 50% -10%, #274b44 0%, var(--desk) 55%, var(--desk-dark) 100%);
+    font-family:var(--sans);
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+    padding:48px 16px 80px;
+  }
+  .wrap{width:100%;max-width:440px;}
+
+  .lede{
+    text-align:center;
+    color:#d9ead0;
+    font-family:var(--mono);
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    margin-bottom:18px;
+    opacity:.75;
+  }
+
+  /* ---- receipt card ---- */
+  .receipt{
+    position:relative;
+    background:var(--paper);
+    box-shadow:0 30px 60px -20px rgba(0,0,0,.55), 0 2px 0 rgba(0,0,0,.05) inset;
+    padding:34px 26px 10px;
+  }
+  .receipt::before, .receipt::after{
+    content:"";
+    position:absolute;
+    left:0;right:0;
+    height:12px;
+    background-image:
+      linear-gradient(135deg, var(--desk-dark) 25%, transparent 25%),
+      linear-gradient(225deg, var(--desk-dark) 25%, transparent 25%);
+    background-size:16px 16px;
+    background-position:0 0;
+  }
+  .receipt::before{ top:-11px; }
+  .receipt::after{ bottom:-11px; transform:scaleY(-1); }
+
+  .brand{
+    text-align:center;
+    margin-bottom:14px;
+  }
+  .brand h1{
+    font-family:var(--mono);
+    font-weight:700;
+    font-size:26px;
+    letter-spacing:.06em;
+    margin:0 0 4px;
+  }
+  .brand p{
+    margin:0;
+    font-size:12.5px;
+    color:var(--ink-soft);
+  }
+
+  .barcode{
+    height:26px;
+    margin:16px 0;
+    background:repeating-linear-gradient(90deg,
+      var(--ink) 0 1.5px, transparent 1.5px 4px,
+      var(--ink) 4px 6px, transparent 6px 9px,
+      var(--ink) 9px 9.5px, transparent 9.5px 13px);
+    opacity:.85;
+  }
+
+  .meta-row{
+    display:flex;justify-content:space-between;
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--ink-soft);
+    margin-bottom:18px;
+  }
+
+  /* ---- upload slot ---- */
+  .slot{
+    border:2px dashed var(--line);
+    border-radius:2px;
+    padding:22px 14px;
+    text-align:center;
+    cursor:pointer;
+    transition:border-color .15s, background .15s;
+    position:relative;
+    overflow:hidden;
+  }
+  .slot:hover, .slot.drag{
+    border-color:var(--stamp);
+    background:rgba(178,58,46,0.04);
+  }
+  .slot input{display:none;}
+  .slot-icon{font-size:26px;display:block;margin-bottom:8px;}
+  .slot-text{font-size:13.5px;color:var(--ink-soft);line-height:1.5;}
+  .slot-text b{color:var(--ink);}
+
+  .preview-wrap{
+    position:relative;
+    margin-top:16px;
+    border:1px solid var(--line);
+  }
+  .preview-wrap img{
+    display:block;
+    width:100%;
+    max-height:230px;
+    object-fit:cover;
+  }
+  .scan-beam{
+    position:absolute; left:0; right:0; height:3px;
+    background:linear-gradient(90deg, transparent, var(--mustard), transparent);
+    box-shadow:0 0 10px 2px var(--mustard);
+    animation:scan 1.6s linear infinite;
+    display:none;
+  }
+  .scanning .scan-beam{display:block;}
+  @keyframes scan{
+    0%{top:0;} 100%{top:100%;}
+  }
+
+  .btn{
+    width:100%;
+    margin-top:16px;
+    padding:13px;
+    border:none;
+    background:var(--mustard);
+    color:var(--ink);
+    font-family:var(--mono);
+    font-weight:700;
+    font-size:14px;
+    letter-spacing:.05em;
+    cursor:pointer;
+    box-shadow:3px 3px 0 var(--ink);
+    transition:transform .08s, box-shadow .08s;
+  }
+  .btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink);}
+  .btn:disabled{opacity:.5;cursor:not-allowed;}
+  .btn.ghost{
+    background:transparent;
+    box-shadow:none;
+    border:1.5px solid var(--ink);
+    margin-top:10px;
+  }
+
+  .err{
+    margin-top:12px;
+    font-size:12.5px;
+    color:#fff;
+    background:var(--stamp);
+    padding:9px 11px;
+    line-height:1.5;
+  }
+
+  /* ---- results ---- */
+  .results{margin-top:8px;}
+  .item{
+    display:flex;
+    align-items:baseline;
+    gap:6px;
+    padding:8px 0;
+    font-size:14px;
+    opacity:0;
+    animation:printIn .35s ease forwards;
+  }
+  .item .name{white-space:nowrap;}
+  .item .fill{
+    flex:1;
+    border-bottom:1px dotted var(--line);
+    transform:translateY(-4px);
+  }
+  .item .kcal{
+    font-family:var(--mono);
+    white-space:nowrap;
+    font-weight:700;
+  }
+  .item .portion{
+    font-size:11.5px;
+    color:var(--ink-soft);
+    display:block;
+    width:100%;
+    margin-top:-4px;
+  }
+  @keyframes printIn{
+    from{opacity:0; transform:translateY(-8px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+
+  .total-row{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-top:10px;
+    padding-top:12px;
+    border-top:2px double var(--ink);
+    font-family:var(--mono);
+    font-weight:700;
+    font-size:17px;
+  }
+
+  .stamp-mark{
+    display:inline-block;
+    margin-top:14px;
+    color:var(--success);
+    border:2px solid var(--success);
+    font-family:var(--mono);
+    font-weight:700;
+    font-size:11px;
+    letter-spacing:.12em;
+    padding:3px 8px;
+    transform:rotate(-4deg);
+    opacity:0;
+    animation:printIn .3s ease forwards .2s;
+  }
+
+  .footer-note{
+    margin-top:18px;
+    padding-top:14px;
+    border-top:1px dashed var(--line);
+    font-size:11px;
+    color:var(--ink-soft);
+    text-align:center;
+    line-height:1.6;
+  }
+  .thanks{
+    font-family:var(--mono);
+    letter-spacing:.15em;
+    font-size:11px;
+    text-align:center;
+    margin-top:10px;
+    color:var(--ink-soft);
+  }
+
+  /* ---- settings ---- */
+  .settings{
+    margin-top:22px;
+    padding-top:14px;
+    border-top:1px dashed var(--line);
+  }
+  .settings summary{
+    cursor:pointer;
+    font-family:var(--mono);
+    font-size:11.5px;
+    letter-spacing:.08em;
+    color:var(--ink-soft);
+    outline:none;
+  }
+  .settings-body{margin-top:12px;}
+  .settings-body label{
+    display:block;
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+  }
+  .settings-body input[type=password]{
+    width:100%;
+    padding:9px 10px;
+    border:1px solid var(--line);
+    background:#fff;
+    font-family:var(--mono);
+    font-size:13px;
+  }
+  .hint{
+    font-size:11px;
+    color:var(--ink-soft);
+    margin-top:8px;
+    line-height:1.6;
+  }
+  .hint a{color:var(--stamp);}
+
+  @media (prefers-reduced-motion: reduce){
+    .item, .stamp-mark{animation:none; opacity:1;}
+    .scan-beam{animation:none;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="lede">SCAN · ESTIMATE · ENJOY RESPONSIBLY</div>
+
+  <div class="receipt">
+    <div class="brand">
+      <h1>热量小票</h1>
+      <p>拍张照，AI 帮你算笔账</p>
+    </div>
+
+    <div class="barcode"></div>
+    <div class="meta-row">
+      <span id="dateLine">--</span>
+      <span>NO. <span id="orderNo">000000</span></span>
+    </div>
+
+    <div class="slot" id="slot">
+      <input type="file" id="fileInput" accept="image/*" capture="environment">
+      <span class="slot-icon">🍽️</span>
+      <span class="slot-text"><b>点击拍照 / 上传</b><br>或将食物图片拖到这里</span>
+    </div>
+
+    <div class="preview-wrap" id="previewWrap" style="display:none;">
+      <img id="previewImg" alt="待识别的食物照片">
+      <div class="scan-beam"></div>
+    </div>
+
+    <button class="btn" id="analyzeBtn" disabled>打印小票 · 开始识别</button>
+    <button class="btn ghost" id="resetBtn" style="display:none;">重新拍照</button>
+
+    <div class="err" id="errBox" style="display:none;"></div>
+
+    <div class="results" id="results"></div>
+    <div class="total-row" id="totalRow" style="display:none;">
+      <span>合计 TOTAL</span>
+      <span id="totalKcal">0 kcal</span>
+    </div>
+    <div id="stampMark" style="display:none;" class="stamp-mark">✓ AI SCANNED</div>
+
+    <div class="footer-note">
+      AI 估算结果仅供参考，可能与实际热量存在偏差，<br>不能替代专业营养师或医生的建议。
+    </div>
+    <div class="thanks">*** 谢谢惠顾 THANK YOU ***</div>
+
+    <details class="settings">
+      <summary>⚙ 小票机设置（配置 API Key）</summary>
+      <div class="settings-body">
+        <label for="apiKey">Anthropic API Key</label>
+        <input type="password" id="apiKey" placeholder="sk-ant-...">
+        <div class="hint">
+          Key 仅保存在你当前浏览器的内存中，刷新页面后需要重新输入，不会被上传到任何服务器。
+          还没有 Key？前往 <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">Anthropic Console</a> 免费申请。
+          <br><br>
+          注意：这是纯前端页面，Key 会直接从你的浏览器发往 Anthropic API，仅适合个人学习 / demo 使用，请不要把带有你的 Key 的页面公开分享给别人。
+        </div>
+      </div>
+    </details>
+  </div>
+</div>
+
+<script>
+  const slot = document.getElementById('slot');
+  const fileInput = document.getElementById('fileInput');
+  const previewWrap = document.getElementById('previewWrap');
+  const previewImg = document.getElementById('previewImg');
+  const analyzeBtn = document.getElementById('analyzeBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const errBox = document.getElementById('errBox');
+  const results = document.getElementById('results');
+  const totalRow = document.getElementById('totalRow');
+  const totalKcal = document.getElementById('totalKcal');
+  const stampMark = document.getElementById('stampMark');
+  const apiKeyInput = document.getElementById('apiKey');
+
+  let currentBase64 = null;
+  let currentMediaType = null;
+
+  document.getElementById('dateLine').textContent = new Date().toLocaleString('zh-CN', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+  document.getElementById('orderNo').textContent = String(Math.floor(Math.random()*900000)+100000);
+
+  slot.addEventListener('click', () => fileInput.click());
+  slot.addEventListener('dragover', e => { e.preventDefault(); slot.classList.add('drag'); });
+  slot.addEventListener('dragleave', () => slot.classList.remove('drag'));
+  slot.addEventListener('drop', e => {
+    e.preventDefault();
+    slot.classList.remove('drag');
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) handleFile(fileInput.files[0]);
+  });
+
+  function handleFile(file){
+    if (!file.type.startsWith('image/')) {
+      showError('请选择一张图片文件。');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result; // data:<mime>;base64,xxxx
+      currentMediaType = file.type;
+      currentBase64 = result.split(',')[1];
+      previewImg.src = result;
+      previewWrap.style.display = 'block';
+      slot.style.display = 'none';
+      analyzeBtn.disabled = false;
+      resetBtn.style.display = 'block';
+      clearResults();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  resetBtn.addEventListener('click', () => {
+    currentBase64 = null;
+    previewWrap.style.display = 'none';
+    previewWrap.classList.remove('scanning');
+    slot.style.display = 'block';
+    analyzeBtn.disabled = true;
+    resetBtn.style.display = 'none';
+    fileInput.value = '';
+    clearResults();
+    hideError();
+  });
+
+  function clearResults(){
+    results.innerHTML = '';
+    totalRow.style.display = 'none';
+    stampMark.style.display = 'none';
+  }
+
+  function showError(msg){
+    errBox.textContent = msg;
+    errBox.style.display = 'block';
+  }
+  function hideError(){ errBox.style.display = 'none'; }
+
+  analyzeBtn.addEventListener('click', async () => {
+    hideError();
+    clearResults();
+
+    const key = apiKeyInput.value.trim();
+    if (!key) {
+      showError('请先在下方「小票机设置」中填入你的 Anthropic API Key。');
+      return;
+    }
+    if (!currentBase64) {
+      showError('请先上传一张食物照片。');
+      return;
+    }
+
+    analyzeBtn.disabled = true;
+    analyzeBtn.textContent = '识别中...';
+    previewWrap.classList.add('scanning');
+
+    try {
+      const foods = await recognizeFood(key, currentBase64, currentMediaType);
+      renderResults(foods);
+    } catch (err) {
+      console.error(err);
+      showError('识别失败：' + err.message + '（请检查 API Key 是否正确，或稍后重试）');
+    } finally {
+      analyzeBtn.disabled = false;
+      analyzeBtn.textContent = '打印小票 · 开始识别';
+      previewWrap.classList.remove('scanning');
+    }
+  });
+
+  async function recognizeFood(apiKey, base64, mediaType){
+    const prompt = `你是一个食物识别与热量估算助手。请仔细观察这张食物照片，识别出图中的每一种食物或饮品，并估算每种食物的大致分量与热量（kcal）。
+
+只返回一个 JSON 对象，不要包含任何其他文字、解释或 Markdown 代码块标记，格式如下：
+{"items":[{"name":"食物名称（中文）","portion":"分量描述，如 一碗/约200g","calories":数字}],"total_calories":数字,"note":"一句简短的备注或健康小提示（中文，20字以内）"}
+
+如果图片中没有食物，items 返回空数组，note 中说明未识别到食物。`;
+
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-5',
+        max_tokens: 1024,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
+            { type: 'text', text: prompt }
+          ]
+        }]
+      })
+    });
+
+    if (!resp.ok) {
+      const t = await resp.text();
+      throw new Error(`HTTP ${resp.status} ${t.slice(0,150)}`);
+    }
+    const data = await resp.json();
+    const textBlock = (data.content || []).find(c => c.type === 'text');
+    if (!textBlock) throw new Error('未收到有效的识别结果');
+
+    let cleaned = textBlock.text.trim().replace(/^```json/i, '').replace(/^```/, '').replace(/```$/, '').trim();
+    let parsed;
+    try {
+      parsed = JSON.parse(cleaned);
+    } catch (e) {
+      throw new Error('返回内容解析失败，请重试一次');
+    }
+    return parsed;
+  }
+
+  function renderResults(data){
+    const items = data.items || [];
+    if (items.length === 0) {
+      showError(data.note || '没有在图片中识别到食物，换一张试试？');
+      return;
+    }
+    let total = 0;
+    items.forEach((item, i) => {
+      total += Number(item.calories) || 0;
+      const row = document.createElement('div');
+      row.className = 'item';
+      row.style.animationDelay = (i * 0.12) + 's';
+      row.innerHTML = `
+        <span class="name">${escapeHtml(item.name || '未知食物')}</span>
+        <span class="fill"></span>
+        <span class="kcal">${Math.round(item.calories) || 0} kcal</span>
+        <span class="portion">${escapeHtml(item.portion || '')}</span>
+      `;
+      results.appendChild(row);
+    });
+
+    const displayTotal = data.total_calories ? Math.round(data.total_calories) : Math.round(total);
+    totalKcal.textContent = displayTotal + ' kcal';
+    totalRow.style.display = 'flex';
+    stampMark.style.display = 'inline-block';
+
+    if (data.note) {
+      const noteEl = document.createElement('div');
+      noteEl.className = 'footer-note';
+      noteEl.style.marginTop = '14px';
+      noteEl.style.borderTop = 'none';
+      noteEl.style.paddingTop = '0';
+      noteEl.textContent = '💡 ' + data.note;
+      results.appendChild(noteEl);
+    }
+  }
+
+  function escapeHtml(str){
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+</script>
+</body>
 </html>
