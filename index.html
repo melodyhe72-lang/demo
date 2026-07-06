@@ -293,6 +293,54 @@
   }
   .hint a{color:var(--stamp);}
 
+  .history-item{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:9px 0;
+    border-bottom:1px dotted var(--line);
+  }
+  .history-item:last-child{border-bottom:none;}
+  .history-thumb{
+    width:44px;height:44px;
+    object-fit:cover;
+    border:1px solid var(--line);
+    flex-shrink:0;
+  }
+  .history-info{flex:1;min-width:0;}
+  .history-date{
+    font-family:var(--mono);
+    font-size:10.5px;
+    color:var(--ink-soft);
+  }
+  .history-summary{
+    font-size:12.5px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .history-kcal{
+    font-family:var(--mono);
+    font-weight:700;
+    font-size:13px;
+    white-space:nowrap;
+  }
+  .history-del{
+    background:none;border:none;
+    color:var(--ink-soft);
+    cursor:pointer;
+    font-size:15px;
+    padding:2px 4px;
+    flex-shrink:0;
+  }
+  .history-del:hover{color:var(--stamp);}
+  .history-empty{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    text-align:center;
+    padding:10px 0;
+  }
+
   @media (prefers-reduced-motion: reduce){
     .item, .stamp-mark{animation:none; opacity:1;}
     .scan-beam{animation:none;}
@@ -348,12 +396,22 @@
       <div class="settings-body">
         <label for="apiKey">阿里云百炼 (DashScope) API Key</label>
         <input type="password" id="apiKey" placeholder="sk-...">
+        <button class="btn ghost" id="clearKeyBtn" type="button" style="margin-top:8px;">清除本机保存的 Key</button>
         <div class="hint">
-          Key 仅保存在你当前浏览器的内存中，刷新页面后需要重新输入，不会被上传到任何服务器。
+          Key 会保存在你当前浏览器的本地存储（localStorage）中，刷新、关闭页面都不会丢失，下次打开自动填好；不会被上传到任何服务器。
           还没有 Key？前往 <a href="https://bailian.console.aliyun.com/" target="_blank" rel="noopener">阿里云百炼控制台</a> → API-KEY 管理，创建一个（格式类似 sk-xxxxxxxx）。新用户通常有免费额度。
           <br><br>
-          注意：这是纯前端页面，Key 会直接从你的浏览器发往阿里云 DashScope 接口，仅适合个人学习 / demo 使用，请不要把带有你的 Key 的页面公开分享给别人。
+          注意：这是纯前端页面，Key 保存在浏览器本地，仅适合你自己的设备使用。如果是公用/共享电脑，用完建议点上面的按钮清除，避免留在别人的浏览器里。
         </div>
+      </div>
+    </details>
+
+    <details class="settings" id="historySection">
+      <summary>🧾 历史小票（<span id="historyCount">0</span>）</summary>
+      <div class="settings-body">
+        <div id="historyList"></div>
+        <button class="btn ghost" id="clearHistoryBtn" type="button" style="margin-top:10px;">清空历史记录</button>
+        <div class="hint">历史记录也保存在本地浏览器中，换设备或清除浏览器数据后会丢失。</div>
       </div>
     </details>
   </div>
@@ -372,9 +430,101 @@
   const totalKcal = document.getElementById('totalKcal');
   const stampMark = document.getElementById('stampMark');
   const apiKeyInput = document.getElementById('apiKey');
+  const clearKeyBtn = document.getElementById('clearKeyBtn');
+  const historyList = document.getElementById('historyList');
+  const historyCount = document.getElementById('historyCount');
+  const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+
+  const APIKEY_STORAGE_KEY = 'calorieReceipt_apiKey';
+  const HISTORY_STORAGE_KEY = 'calorieReceipt_history';
+  const MAX_HISTORY = 30;
 
   let currentBase64 = null;
   let currentMediaType = null;
+
+  // ---- API Key 本地持久化 ----
+  try {
+    const savedKey = localStorage.getItem(APIKEY_STORAGE_KEY);
+    if (savedKey) apiKeyInput.value = savedKey;
+  } catch (e) { /* localStorage 不可用时静默忽略 */ }
+
+  apiKeyInput.addEventListener('input', () => {
+    try { localStorage.setItem(APIKEY_STORAGE_KEY, apiKeyInput.value.trim()); }
+    catch (e) { /* 忽略存储失败 */ }
+  });
+
+  clearKeyBtn.addEventListener('click', () => {
+    apiKeyInput.value = '';
+    try { localStorage.removeItem(APIKEY_STORAGE_KEY); } catch (e) {}
+  });
+
+  // ---- 历史记录 ----
+  function loadHistory(){
+    try { return JSON.parse(localStorage.getItem(HISTORY_STORAGE_KEY) || '[]'); }
+    catch (e) { return []; }
+  }
+  function saveHistoryList(list){
+    try { localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(list)); }
+    catch (e) { /* 存储空间不足等情况，静默忽略 */ }
+  }
+  function addHistoryEntry(entry){
+    const list = loadHistory();
+    list.unshift(entry);
+    if (list.length > MAX_HISTORY) list.length = MAX_HISTORY;
+    saveHistoryList(list);
+    renderHistory();
+  }
+  function deleteHistoryEntry(id){
+    const list = loadHistory().filter(item => item.id !== id);
+    saveHistoryList(list);
+    renderHistory();
+  }
+  function renderHistory(){
+    const list = loadHistory();
+    historyCount.textContent = list.length;
+    if (list.length === 0) {
+      historyList.innerHTML = '<div class="history-empty">还没有历史记录，识别一次试试～</div>';
+      return;
+    }
+    historyList.innerHTML = '';
+    list.forEach(item => {
+      const row = document.createElement('div');
+      row.className = 'history-item';
+      const summary = (item.items || []).map(i => i.name).join('、') || '未知食物';
+      row.innerHTML = `
+        <img class="history-thumb" src="${item.thumb || ''}" alt="">
+        <div class="history-info">
+          <div class="history-date">${escapeHtml(item.date || '')}</div>
+          <div class="history-summary">${escapeHtml(summary)}</div>
+        </div>
+        <div class="history-kcal">${item.total || 0} kcal</div>
+        <button class="history-del" title="删除">✕</button>
+      `;
+      row.querySelector('.history-del').addEventListener('click', () => deleteHistoryEntry(item.id));
+      historyList.appendChild(row);
+    });
+  }
+  clearHistoryBtn.addEventListener('click', () => {
+    saveHistoryList([]);
+    renderHistory();
+  });
+  function makeThumbnail(imgEl, size){
+    size = size || 88;
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      const iw = imgEl.naturalWidth || size, ih = imgEl.naturalHeight || size;
+      const scale = Math.max(size/iw, size/ih);
+      const sw = size/scale, sh = size/scale;
+      const sx = (iw - sw)/2, sy = (ih - sh)/2;
+      ctx.drawImage(imgEl, sx, sy, sw, sh, 0, 0, size, size);
+      return canvas.toDataURL('image/jpeg', 0.6);
+    } catch (e) {
+      return '';
+    }
+  }
+  renderHistory();
 
   document.getElementById('dateLine').textContent = new Date().toLocaleString('zh-CN', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
   document.getElementById('orderNo').textContent = String(Math.floor(Math.random()*900000)+100000);
@@ -546,6 +696,14 @@
       noteEl.textContent = '💡 ' + data.note;
       results.appendChild(noteEl);
     }
+
+    addHistoryEntry({
+      id: Date.now() + '-' + Math.random().toString(36).slice(2, 7),
+      date: new Date().toLocaleString('zh-CN', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}),
+      items: items.map(i => ({ name: i.name, calories: Math.round(i.calories) || 0 })),
+      total: displayTotal,
+      thumb: makeThumbnail(previewImg)
+    });
   }
 
   function escapeHtml(str){
