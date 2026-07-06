@@ -346,13 +346,13 @@
     <details class="settings">
       <summary>⚙ 小票机设置（配置 API Key）</summary>
       <div class="settings-body">
-        <label for="apiKey">Anthropic API Key</label>
-        <input type="password" id="apiKey" placeholder="sk-ant-...">
+        <label for="apiKey">阿里云百炼 (DashScope) API Key</label>
+        <input type="password" id="apiKey" placeholder="sk-...">
         <div class="hint">
           Key 仅保存在你当前浏览器的内存中，刷新页面后需要重新输入，不会被上传到任何服务器。
-          还没有 Key？前往 <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">Anthropic Console</a> 免费申请。
+          还没有 Key？前往 <a href="https://bailian.console.aliyun.com/" target="_blank" rel="noopener">阿里云百炼控制台</a> → API-KEY 管理，创建一个（格式类似 sk-xxxxxxxx）。新用户通常有免费额度。
           <br><br>
-          注意：这是纯前端页面，Key 会直接从你的浏览器发往 Anthropic API，仅适合个人学习 / demo 使用，请不要把带有你的 Key 的页面公开分享给别人。
+          注意：这是纯前端页面，Key 会直接从你的浏览器发往阿里云 DashScope 接口，仅适合个人学习 / demo 使用，请不要把带有你的 Key 的页面公开分享给别人。
         </div>
       </div>
     </details>
@@ -441,7 +441,7 @@
 
     const key = apiKeyInput.value.trim();
     if (!key) {
-      showError('请先在下方「小票机设置」中填入你的 Anthropic API Key。');
+      showError('请先在下方「小票机设置」中填入你的阿里云百炼 API Key。');
       return;
     }
     if (!currentBase64) {
@@ -469,26 +469,24 @@
   async function recognizeFood(apiKey, base64, mediaType){
     const prompt = `你是一个食物识别与热量估算助手。请仔细观察这张食物照片，识别出图中的每一种食物或饮品，并估算每种食物的大致分量与热量（kcal）。
 
-只返回一个 JSON 对象，不要包含任何其他文字、解释或 Markdown 代码块标记，格式如下：
+只返回一个 JSON 对象，不要包含任何其他文字、解释、前后缀或 Markdown 代码块标记，格式如下：
 {"items":[{"name":"食物名称（中文）","portion":"分量描述，如 一碗/约200g","calories":数字}],"total_calories":数字,"note":"一句简短的备注或健康小提示（中文，20字以内）"}
 
 如果图片中没有食物，items 返回空数组，note 中说明未识别到食物。`;
 
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    // 阿里云百炼 DashScope，OpenAI 兼容接口（通义千问 VL）
+    const resp = await fetch('https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
+        'Authorization': 'Bearer ' + apiKey
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-5',
-        max_tokens: 1024,
+        model: 'qwen-vl-plus',
         messages: [{
           role: 'user',
           content: [
-            { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
+            { type: 'image_url', image_url: { url: `data:${mediaType};base64,${base64}` } },
             { type: 'text', text: prompt }
           ]
         }]
@@ -500,10 +498,10 @@
       throw new Error(`HTTP ${resp.status} ${t.slice(0,150)}`);
     }
     const data = await resp.json();
-    const textBlock = (data.content || []).find(c => c.type === 'text');
-    if (!textBlock) throw new Error('未收到有效的识别结果');
+    const message = data.choices && data.choices[0] && data.choices[0].message;
+    if (!message || !message.content) throw new Error('未收到有效的识别结果');
 
-    let cleaned = textBlock.text.trim().replace(/^```json/i, '').replace(/^```/, '').replace(/```$/, '').trim();
+    let cleaned = String(message.content).trim().replace(/^```json/i, '').replace(/^```/, '').replace(/```$/, '').trim();
     let parsed;
     try {
       parsed = JSON.parse(cleaned);
