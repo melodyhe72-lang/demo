@@ -1,0 +1,1928 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>身体复盘 v1.5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#E8DFC8; --ink:#262521; --ink-soft:#6b6558; --line:#cabf9d;
+    --scale-bg:#c6d0c1; --scale-ink:#2f3a33;
+    --pen:#2c5b86; --pen-soft:#e3ecf3;
+    --alert:#a63d2f; --alert-soft:#f3e0dc;
+    --good:#4f7a52; --good-soft:#e3ecdf;
+    --amber:#b5842a; --amber-soft:#f2e7d3;
+    --mono:'Share Tech Mono','Courier New',monospace;
+    --sans:'Noto Sans SC',-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    min-height:100vh;
+    background:
+      repeating-linear-gradient(180deg, transparent 0 27px, rgba(107,101,88,0.08) 27px 28px),
+      var(--paper);
+    font-family:var(--sans); color:var(--ink);
+    display:flex; justify-content:center; padding:40px 16px 80px;
+  }
+  .wrap{width:100%;max-width:480px;}
+  .sheet{background:var(--paper);border:1px solid var(--line);box-shadow:0 22px 50px -22px rgba(38,37,33,.4);padding:26px 24px 20px;}
+  .head-strip{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--ink-soft);padding-bottom:10px;border-bottom:1px solid var(--line);margin-bottom:18px;}
+  h1{font-family:var(--sans);font-weight:700;font-size:22px;margin:0 0 2px;letter-spacing:.02em;}
+  .sub{font-size:12.5px;color:var(--ink-soft);margin:0 0 20px;}
+
+  .scale-unit{display:flex;gap:16px;align-items:stretch;margin-bottom:22px;}
+  .lcd-screen{flex:0 0 168px;background:var(--scale-bg);border:3px solid #9aa595;border-radius:4px;padding:14px 10px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+  .lcd-screen::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(180deg, rgba(0,0,0,0.03) 0 2px, transparent 2px 4px);pointer-events:none;}
+  .lcd-weight{font-family:var(--mono);font-size:40px;color:var(--scale-ink);line-height:1;letter-spacing:.02em;}
+  .lcd-unit{font-family:var(--mono);font-size:11px;color:var(--scale-ink);opacity:.7;margin-top:2px;letter-spacing:.15em;}
+  .lcd-delta{font-family:var(--mono);font-size:13px;margin-top:8px;min-height:16px;color:var(--scale-ink);}
+  .lcd-delta.good{color:#2f4d31;} .lcd-delta.alert{color:#6e2a20;}
+  .flicker{animation:flicker .22s steps(3,end);}
+  @keyframes flicker{0%{opacity:.3;}50%{opacity:.85;}100%{opacity:1;}}
+  .scale-inputs{flex:1;display:flex;flex-direction:column;justify-content:center;gap:10px;}
+
+  .field-row label{display:block;font-size:11.5px;color:var(--ink-soft);margin-bottom:4px;}
+  .field-row input, .field-row select{width:100%;font-family:var(--sans);font-size:14px;padding:7px 9px;border:1px solid var(--line);background:#fbf8f1;color:var(--ink);}
+  .field-row input:focus, .field-row select:focus{outline:2px solid var(--pen);outline-offset:1px;}
+
+  .row{padding:12px 0;border-bottom:1px dashed var(--line);}
+  .row:last-of-type{border-bottom:none;}
+  .row-label{font-size:11.5px;font-weight:600;color:var(--ink-soft);letter-spacing:.04em;margin-bottom:8px;display:block;}
+  .row-label .sub-note{font-weight:400;font-size:11px;}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .grid-2 .field-row label{font-size:11px;}
+
+  .meal-input-group{display:flex;gap:6px;}
+  .meal-input-group input{flex:1;min-width:0;}
+  .photo-btn{flex:0 0 auto;width:34px;border:1px solid var(--line);background:#fbf8f1;cursor:pointer;font-size:15px;line-height:1;}
+  .photo-btn:hover{border-color:var(--pen);}
+  .photo-btn:disabled{opacity:.5;cursor:wait;}
+  #autoFillHint{margin-top:3px;font-size:11px;color:var(--good);}
+
+  .time-row{display:flex;align-items:center;gap:8px;}
+  .time-row input[type=time]{width:auto;flex:1;}
+  .duration{font-family:var(--mono);font-size:12px;color:var(--ink-soft);white-space:nowrap;}
+
+  .chip-group{display:flex;flex-wrap:wrap;gap:7px;}
+  .chip{font-size:12.5px;padding:6px 12px;border:1px solid var(--line);background:#fbf8f1;cursor:pointer;user-select:none;color:var(--ink-soft);}
+  .chip.active{background:var(--pen);border-color:var(--pen);color:#fff;}
+  .radio-group{display:flex;flex-wrap:wrap;gap:7px;}
+  .radio-chip{font-size:12.5px;padding:6px 12px;border:1px solid var(--line);background:#fbf8f1;cursor:pointer;color:var(--ink-soft);}
+  .radio-chip.active{background:var(--ink);border-color:var(--ink);color:var(--paper);}
+
+  .slider-row{display:flex;align-items:center;gap:10px;padding:6px 0;}
+  .slider-row label{flex:0 0 92px;font-size:12px;color:var(--ink-soft);}
+  .slider-row input[type=range]{flex:1;}
+  .slider-val{flex:0 0 22px;font-family:var(--mono);font-size:12.5px;text-align:right;}
+
+  .btn{width:100%;margin-top:12px;padding:13px;border:none;background:var(--pen);color:#fff;font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.05em;cursor:pointer;}
+  .btn:disabled{opacity:.5;cursor:not-allowed;}
+  .btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--ink);}
+  .btn.small{width:auto;padding:8px 14px;font-size:12px;margin-top:0;}
+  .btn-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+  .btn-row .btn{width:auto;flex:1 1 auto;margin-top:0;}
+
+  .err{margin-top:14px;font-size:12.5px;color:#fff;background:var(--alert);padding:10px 12px;line-height:1.5;}
+
+  .tag-chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:5px 10px;background:var(--pen-soft);color:var(--pen);border:1px solid var(--pen);}
+  .tag-chip button{background:none;border:none;color:var(--pen);cursor:pointer;font-size:12px;padding:0;line-height:1;}
+
+  .rule-card{margin-top:10px;padding:12px 14px;background:#fbf8f1;border-left:3px solid var(--pen);font-size:12.5px;line-height:1.6;}
+  .rule-card .rule-title{font-weight:700;font-size:13px;margin-bottom:4px;}
+  .rule-score-bar{height:6px;background:var(--line);margin:6px 0;position:relative;}
+  .rule-score-fill{height:100%;background:var(--pen);}
+  .rule-meta{color:var(--ink-soft);font-size:11.5px;}
+
+  .prediction-card{margin-top:12px;padding:14px 16px;background:var(--pen-soft);border-left:3px solid var(--pen);font-size:13px;line-height:1.7;}
+
+  .note{margin-top:14px;padding:16px 18px;background:var(--pen-soft);border-left:3px solid var(--pen);opacity:0;animation:reveal .4s ease forwards;}
+  @keyframes reveal{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+  .note h3{margin:0 0 8px;font-size:13px;color:var(--pen);letter-spacing:.04em;}
+  .note-block{margin-bottom:12px;}
+  .note-block:last-child{margin-bottom:0;}
+  .note-block p{margin:0;font-size:13.5px;line-height:1.7;white-space:pre-wrap;}
+  .note-block ul{margin:4px 0 0;padding-left:18px;}
+  .note-block li{font-size:13.5px;line-height:1.7;}
+
+  .settings{margin-top:22px;padding-top:14px;border-top:1px dashed var(--line);}
+  .settings summary{cursor:pointer;font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;color:var(--ink-soft);outline:none;}
+  .settings-body{margin-top:12px;}
+  .settings-body label{display:block;font-size:11.5px;color:var(--ink-soft);margin-bottom:4px;margin-top:10px;}
+  .settings-body label:first-child{margin-top:0;}
+  .settings-body input{width:100%;padding:8px 9px;border:1px solid var(--line);background:#fbf8f1;font-family:var(--mono);font-size:12.5px;}
+  .hint{font-size:11px;color:var(--ink-soft);margin-top:8px;line-height:1.6;}
+  .hint a{color:var(--pen);}
+
+  .sparkline{width:100%;height:60px;display:block;margin-bottom:10px;}
+  .hist-item{padding:10px 0;border-bottom:1px dotted var(--line);}
+  .hist-item:last-child{border-bottom:none;}
+  .hist-top{display:flex;align-items:center;justify-content:space-between;cursor:pointer;gap:8px;}
+  .hist-date{font-family:var(--mono);font-size:11px;color:var(--ink-soft);flex:1;}
+  .hist-weight{font-family:var(--mono);font-weight:700;font-size:13.5px;white-space:nowrap;}
+  .hist-del{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:14px;padding:0 4px;}
+  .hist-del:hover{color:var(--alert);}
+  .hist-detail{display:none;margin-top:8px;font-size:12.5px;color:var(--ink-soft);line-height:1.7;}
+  .hist-detail.open{display:block;}
+  .hist-empty{font-size:12.5px;color:var(--ink-soft);text-align:center;padding:10px 0;}
+  .hist-tags span{display:inline-block;font-size:10.5px;color:var(--pen);background:var(--pen-soft);padding:1px 6px;margin:2px 3px 0 0;}
+
+  @media (prefers-reduced-motion: reduce){.flicker,.note{animation:none;opacity:1;}}
+  @media (max-width:420px){.scale-unit{flex-direction:column;}.lcd-screen{flex:none;width:100%;}.slider-row label{flex-basis:78px;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="sheet">
+    <div class="head-strip">
+      <span id="dateLine">--</span>
+      <span>RECORD #<span id="entryNo">001</span></span>
+    </div>
+    <h1 id="greeting">身体复盘</h1>
+    <p class="sub">v1.5 · 记录数据，本地规则匹配 + 预测，AI 生成复盘。</p>
+
+    <div class="row">
+      <span class="row-label">基本信息</span>
+      <div class="grid-2">
+        <div class="field-row"><label for="userName">姓名/昵称</label><input type="text" id="userName" placeholder="你的称呼"></div>
+        <div class="field-row"><label for="userAge">年龄</label><input type="number" id="userAge" placeholder="30"></div>
+      </div>
+    </div>
+
+    <div class="scale-unit">
+      <div class="lcd-screen">
+        <div class="lcd-weight" id="lcdWeight">--.-</div>
+        <div class="lcd-unit">KG · TODAY</div>
+        <div class="lcd-delta" id="lcdDelta">&nbsp;</div>
+      </div>
+      <div class="scale-inputs">
+        <div class="field-row">
+          <label for="todayWeight">今日体重 (kg)</label>
+          <input type="number" id="todayWeight" step="0.1" placeholder="98.5">
+        </div>
+        <div class="field-row">
+          <label for="yestWeight">昨日体重 (kg)</label>
+          <input type="number" id="yestWeight" step="0.1" placeholder="99.4">
+          <div id="autoFillHint" style="display:none;">已自动带入上次记录</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <span class="row-label">昨日饮食 <span class="sub-note">（可拍照识别，识别后可手动修改）</span></span>
+      <div class="grid-2">
+        <div class="field-row">
+          <label>早餐</label>
+          <div class="meal-input-group">
+            <input type="text" id="breakfast" placeholder="燕麦 + 鸡蛋">
+            <button type="button" class="photo-btn" data-target="breakfast" title="拍照识别">📷</button>
+            <input type="file" accept="image/*" capture="environment" class="photo-file" data-target="breakfast" style="display:none;">
+          </div>
+        </div>
+        <div class="field-row">
+          <label>午餐</label>
+          <div class="meal-input-group">
+            <input type="text" id="lunch" placeholder="米饭 + 青菜 + 鱼">
+            <button type="button" class="photo-btn" data-target="lunch" title="拍照识别">📷</button>
+            <input type="file" accept="image/*" capture="environment" class="photo-file" data-target="lunch" style="display:none;">
+          </div>
+        </div>
+        <div class="field-row">
+          <label>晚餐</label>
+          <div class="meal-input-group">
+            <input type="text" id="dinner" placeholder="沙拉 + 鸡胸肉">
+            <button type="button" class="photo-btn" data-target="dinner" title="拍照识别">📷</button>
+            <input type="file" accept="image/*" capture="environment" class="photo-file" data-target="dinner" style="display:none;">
+          </div>
+        </div>
+        <div class="field-row">
+          <label>零食</label>
+          <div class="meal-input-group">
+            <input type="text" id="snack" placeholder="无 / 坚果一把">
+            <button type="button" class="photo-btn" data-target="snack" title="拍照识别">📷</button>
+            <input type="file" accept="image/*" capture="environment" class="photo-file" data-target="snack" style="display:none;">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <span class="row-label">运动</span>
+      <div class="field-row"><input type="text" id="exerciseText" placeholder="快走 6.2km / 浮潜 3 小时"></div>
+    </div>
+
+    <div class="row">
+      <span class="row-label">睡眠</span>
+      <div class="time-row">
+        <input type="time" id="sleepStart" value="23:30">
+        <span>→</span>
+        <input type="time" id="sleepEnd" value="07:30">
+        <span class="duration" id="sleepDuration">8h00m</span>
+      </div>
+    </div>
+
+    <div class="row">
+      <span class="row-label">排便</span>
+      <div class="radio-group" id="bowelGroup">
+        <div class="radio-chip" data-value="正常">正常</div>
+        <div class="radio-chip" data-value="便秘">便秘</div>
+        <div class="radio-chip" data-value="腹泻">腹泻</div>
+        <div class="radio-chip" data-value="其他">其他</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <span class="row-label">药物 / 司美格鲁肽</span>
+      <div class="field-row"><input type="text" id="medication" placeholder="其他用药备注（可选）"></div>
+      <div class="grid-2" style="margin-top:8px;">
+        <div class="field-row">
+          <label>是否使用司美格鲁肽</label>
+          <div class="radio-group" id="semaglutideUsingGroup">
+            <div class="radio-chip" data-value="是">是</div>
+            <div class="radio-chip" data-value="否">否</div>
+          </div>
+        </div>
+        <div class="field-row">
+          <label>剂量</label>
+          <div class="radio-group" id="semaglutideDoseGroup">
+            <div class="radio-chip" data-value="0.25mg">0.25mg</div>
+            <div class="radio-chip" data-value="0.5mg">0.5mg</div>
+            <div class="radio-chip" data-value="1.0mg">1.0mg</div>
+            <div class="radio-chip" data-value="其他">其他</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <span class="row-label">经期状态</span>
+      <div class="radio-group" id="menstrualStatusGroup">
+        <div class="radio-chip" data-value="非经期">非经期</div>
+        <div class="radio-chip" data-value="经前">经前</div>
+        <div class="radio-chip" data-value="经期">经期</div>
+        <div class="radio-chip" data-value="排卵期">排卵期</div>
+        <div class="radio-chip" data-value="不确定">不确定</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <span class="row-label">主观评分 <span class="sub-note">（0-10）</span></span>
+      <div class="slider-row"><label>饥饿感</label><input type="range" min="0" max="10" value="5" id="hungerScore"><span class="slider-val" id="hungerScoreVal">5</span></div>
+      <div class="slider-row"><label>食欲</label><input type="range" min="0" max="10" value="5" id="appetiteScore"><span class="slider-val" id="appetiteScoreVal">5</span></div>
+      <div class="slider-row"><label>恶心</label><input type="range" min="0" max="10" value="0" id="nauseaScore"><span class="slider-val" id="nauseaScoreVal">0</span></div>
+      <div class="slider-row"><label>腹胀</label><input type="range" min="0" max="10" value="0" id="bloatingScore"><span class="slider-val" id="bloatingScoreVal">0</span></div>
+      <div class="slider-row"><label>便秘</label><input type="range" min="0" max="10" value="0" id="constipationScore"><span class="slider-val" id="constipationScoreVal">0</span></div>
+      <div class="slider-row"><label>疲劳</label><input type="range" min="0" max="10" value="3" id="fatigueScore"><span class="slider-val" id="fatigueScoreVal">3</span></div>
+      <div class="slider-row"><label>膝盖不适</label><input type="range" min="0" max="10" value="0" id="kneePainScore"><span class="slider-val" id="kneePainScoreVal">0</span></div>
+      <div class="field-row" style="margin-top:8px;">
+        <label for="subjectiveNote">主观备注</label>
+        <input type="text" id="subjectiveNote" placeholder="例：不饿但仍想吃，胃里没消化">
+      </div>
+    </div>
+
+    <div class="row">
+      <span class="row-label">特殊情况</span>
+      <div class="chip-group" id="specialGroup">
+        <div class="chip" data-value="经期">经期</div>
+        <div class="chip" data-value="加班">加班</div>
+        <div class="chip" data-value="聚餐">聚餐</div>
+        <div class="chip" data-value="吃咸">吃咸</div>
+        <div class="chip" data-value="看电影">看电影</div>
+      </div>
+      <div class="field-row" style="margin-top:8px;"><input type="text" id="specialNote" placeholder="其他备注（可选）"></div>
+    </div>
+
+    <div class="row">
+      <span class="row-label">身体感受</span>
+      <div class="chip-group" id="bodyGroup">
+        <div class="chip" data-value="内脏变轻盈">内脏变轻盈</div>
+        <div class="chip" data-value="脱发">脱发</div>
+        <div class="chip" data-value="皮肤变化">皮肤变化</div>
+        <div class="chip" data-value="精力变化">精力变化</div>
+        <div class="chip" data-value="腹胀">腹胀</div>
+      </div>
+      <div class="field-row" style="margin-top:8px;"><input type="text" id="bodyNote" placeholder="其他身体感受（可选）"></div>
+    </div>
+
+    <div class="row">
+      <span class="row-label">今日标签 <span class="sub-note">（自动生成，可手动增删）</span></span>
+      <button type="button" class="btn ghost small" id="generateTagsBtn" style="width:100%;">🏷 生成标签</button>
+      <div id="tagsContainer" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;"></div>
+      <div class="meal-input-group" style="margin-top:8px;">
+        <input type="text" id="addTagInput" placeholder="手动添加标签，回车确认">
+      </div>
+    </div>
+
+    <button type="button" class="btn" id="generateBtn">► 生成复盘</button>
+    <div class="err" id="errBox" style="display:none;"></div>
+    <div id="ruleMatchesArea"></div>
+    <div id="predictionArea"></div>
+    <div id="aiReviewArea"></div>
+
+    <details class="settings">
+      <summary>💾 数据管理</summary>
+      <div class="settings-body">
+        <div class="btn-row">
+          <button type="button" class="btn ghost small" id="copyChatGPTBtn">复制今日数据给 ChatGPT</button>
+          <button type="button" class="btn ghost small" id="exportJsonBtn">导出全部数据 JSON</button>
+        </div>
+        <div class="hint">导出内容包含历史记录、规则库和当前这条记录，不包含你的 API Key。</div>
+      </div>
+    </details>
+
+    <details class="settings">
+      <summary>📚 规则库管理</summary>
+      <div class="settings-body">
+        <div class="hint" id="ruleCount" style="margin-top:0;">-- 条正式规则</div>
+        <div class="btn-row">
+          <button type="button" class="btn ghost small" id="exportRulesBtn">导出规则库 JSON</button>
+          <button type="button" class="btn ghost small" id="importRulesBtn">导入规则库 JSON</button>
+          <input type="file" id="importRulesFile" accept="application/json" style="display:none;">
+        </div>
+        <div class="btn-row">
+          <button type="button" class="btn ghost small" id="copyRulesBtn">复制规则库 JSON 给 ChatGPT</button>
+          <button type="button" class="btn ghost small" id="resetRulesBtn">恢复默认规则</button>
+        </div>
+        <div class="hint">
+          正式规则库保存在本机浏览器 localStorage（<code>bodyReview_rules</code>），不再写死在代码里；候选规则单独存放在 <code>bodyReview_candidateRules</code>。<br>
+          导入时会校验格式（数组、每条含 id/title/coreTriggers/optionalTriggers），格式不对会提示错误，不会覆盖现有规则库。<br>
+          "恢复默认规则"会用代码里的默认规则库重置整个规则库，此操作不可撤销。
+        </div>
+        <div class="row-label" style="margin-top:14px;">🧩 候选规则（只读展示，尚未自动转正）</div>
+        <div id="candidateRulesList"></div>
+      </div>
+    </details>
+
+    <details class="settings">
+      <summary>🏷 标签规则管理（TAG_RULES）</summary>
+      <div class="settings-body">
+        <div class="hint" id="tagRuleCount" style="margin-top:0;">-- 条标签规则</div>
+        <div class="btn-row">
+          <button type="button" class="btn ghost small" id="exportTagRulesBtn">导出 TAG_RULES</button>
+          <button type="button" class="btn ghost small" id="importTagRulesBtn">导入 TAG_RULES</button>
+          <input type="file" id="importTagRulesFile" accept="application/json" style="display:none;">
+        </div>
+        <div class="btn-row">
+          <button type="button" class="btn ghost small" id="copyTagRulesBtn">复制 TAG_RULES 给 ChatGPT</button>
+          <button type="button" class="btn ghost small" id="resetTagRulesBtn">恢复默认标签规则</button>
+        </div>
+        <div class="hint">
+          每条标签规则包含 id / tag / matchFields / keywords / conditions / source / enabled。<br>
+          matchFields 决定去哪些字段里找关键词（如 meals、exercise_text、subjective_note）；conditions 是结构化判断（如"食欲评分 ≤3"）。同一个 tag 可以有多条规则，命中任意一条就打上标签（相当于"或"关系）。<br>
+          保存在 <code>bodyReview_tagRules</code>，extractTags() 只负责执行，不再写死关键词。
+        </div>
+      </div>
+    </details>
+
+    <details class="settings">
+      <summary>📐 预测修正规则管理（PREDICTION_MODIFIERS）</summary>
+      <div class="settings-body">
+        <div class="hint" id="modifierCount" style="margin-top:0;">-- 条预测修正规则</div>
+        <div class="btn-row">
+          <button type="button" class="btn ghost small" id="exportModifiersBtn">导出 PREDICTION_MODIFIERS</button>
+          <button type="button" class="btn ghost small" id="importModifiersBtn">导入 PREDICTION_MODIFIERS</button>
+          <input type="file" id="importModifiersFile" accept="application/json" style="display:none;">
+        </div>
+        <div class="btn-row">
+          <button type="button" class="btn ghost small" id="copyModifiersBtn">复制修正规则给 ChatGPT</button>
+          <button type="button" class="btn ghost small" id="resetModifiersBtn">恢复默认修正规则</button>
+        </div>
+        <div class="hint">
+          每条修正规则包含 id / triggers / adjustMin / adjustMax / reason / enabled。当 record 的标签同时包含 triggers 里的所有标签时生效，对预测区间做加减，并把 reason 加入预测原因列表。<br>
+          保存在 <code>bodyReview_predictionModifiers</code>，predictWeightChange() 只负责按顺序应用这些修正项，不再写死"高钠+便秘""司美格鲁肽+食欲下降"这些判断。
+        </div>
+      </div>
+    </details>
+
+    <details class="settings">
+      <summary>⚙ AI 接口设置</summary>
+      <div class="settings-body">
+        <label>快捷切换服务商</label>
+        <div class="chip-group" id="presetGroup">
+          <div class="chip" data-preset="openai">OpenAI</div>
+          <div class="chip" data-preset="qwen">通义千问</div>
+          <div class="chip" data-preset="custom">自定义</div>
+        </div>
+        <label for="baseUrl" style="margin-top:14px;">API Base URL</label>
+        <input type="text" id="baseUrl" placeholder="https://api.openai.com/v1/chat/completions">
+        <label for="modelName">模型名称（文本分析）</label>
+        <input type="text" id="modelName" placeholder="gpt-5.4-mini">
+        <label for="visionModel">拍照识别模型（需支持图片）</label>
+        <input type="text" id="visionModel" placeholder="gpt-5.4-mini / qwen-vl-plus">
+        <label for="apiKey">API Key</label>
+        <input type="password" id="apiKey" placeholder="sk-...">
+        <button class="btn ghost small" id="clearKeyBtn" type="button" style="margin-top:10px;">清除本机保存的设置</button>
+        <div class="hint">
+          以上内容都保存在本机浏览器 localStorage 中，不会上传到任何服务器，刷新页面也不会丢失。<br>
+          用的是 OpenAI 兼容的 Chat Completions 接口格式，选好服务商预设后只需填自己的 API Key；也可以点"自定义"手动填写。
+        </div>
+      </div>
+    </details>
+
+    <details class="settings">
+      <summary>📈 历史复盘（<span id="histCount">0</span>）</summary>
+      <div class="settings-body">
+        <canvas class="sparkline" id="sparkline"></canvas>
+        <div id="histList"></div>
+        <button class="btn ghost small" id="clearHistBtn" type="button" style="margin-top:10px;">清空历史记录</button>
+      </div>
+    </details>
+  </div>
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const $$ = sel => Array.from(document.querySelectorAll(sel));
+
+  const SETTINGS_KEY = 'bodyReview_settings';
+  const HISTORY_KEY = 'bodyReview_history_v15';
+  const PROFILE_KEY = 'bodyReview_profile';
+  const MAX_HISTORY = 90;
+
+  function deepClone(o){ return JSON.parse(JSON.stringify(o)); }
+  function getPath(obj, path){
+    return String(path).split('.').reduce((o,k)=> (o && o[k] !== undefined) ? o[k] : undefined, obj);
+  }
+  function safeJsonParse(text){
+    if (!text) return null;
+    let cleaned = String(text).trim().replace(/^```json/i,'').replace(/^```/,'').replace(/```$/,'').trim();
+    try { return JSON.parse(cleaned); }
+    catch(e){
+      const start = cleaned.indexOf('{'), end = cleaned.lastIndexOf('}');
+      if (start >= 0 && end > start) { try { return JSON.parse(cleaned.slice(start, end+1)); } catch(e2){ return null; } }
+      return null;
+    }
+  }
+  function escapeHtml(str){
+    const d = document.createElement('div');
+    d.textContent = str == null ? '' : String(str);
+    return d.innerHTML;
+  }
+  function showError(msg){ const b = $('errBox'); b.textContent = msg; b.style.display = 'block'; }
+  function clearError(){ $('errBox').style.display = 'none'; }
+  function fileToBase64(file){
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // ---- 空记录结构（v1.5 精简版）----
+  function createEmptyRecord(){
+    return {
+      version:'1.5', id:'record_'+Date.now(), date:'', createdAt:'',
+      profile:{ name:'', age:'' },
+      weight:{ today_kg:null, yesterday_kg:null, change_kg:null },
+      meals:{ breakfast:'', lunch:'', dinner:'', snack:'' },
+      exercise_text:'',
+      sleep:{ start:'', end:'', duration_min:null },
+      bowel:{ status:'' },
+      medication:{ raw:'', semaglutide_using:'', semaglutide_dose:'' },
+      menstrual_status:'',
+      subjective:{ hunger_score:5, appetite_score:5, nausea_score:0, bloating_score:0, constipation_score:0, fatigue_score:3, knee_pain_score:0, note:'' },
+      special:{ selected:[], note:'' },
+      bodyFeel:{ selected:[], note:'' },
+      tags:[],
+      matchedRules:[],
+      analysisMode: '',
+      weightAnalysis: {
+        actualChangeKg: null, direction:'', mostLikelyCauses:[], matchedRules:[],
+        ruleExpectedRange:{}, fatGainLikelihood:'', isNormalFluctuation:true, explanation:''
+      },
+      nextWeightPrediction: {
+        predictedMin: null, predictedMax: null, direction:'', reasons:[], confidence:'', fatGainLikelihood:'', note:''
+      },
+      validation: {
+        previousPredictionExists:false, matched:null, previousPredictedRange:{}, actualChangeKg:null
+      },
+      aiReview:{},
+      aiReviewRaw:''
+    };
+  }
+
+  // ---- 内置规则库 REVIEW_RULES ----
+  const DEFAULT_REVIEW_RULES = [
+    { id:'sodium_water_retention', title:'高钠后体重上涨',
+      coreTriggers:['高钠','体重上涨'], optionalTriggers:['加工食品','便秘'],
+      expectedWeightChange:{min:0.3,max:1.2}, mainCauses:['钠导致水分潴留','胃肠内容物增加'], fatGainLikely:false,
+      explanation:'高钠后的短期体重上涨更可能来自水分潴留和胃肠内容物，不应直接判断为脂肪增加。',
+      suggestion:'今天正常饮食、多喝水，不要补偿性节食。', matchedCount:0, successCount:0, accuracy:null },
+    { id:'movie_snack_water_retention', title:'零食后体重上涨',
+      coreTriggers:['电影零食','体重上涨'], optionalTriggers:['高钠','加工食品','高脂健康食物','高脂低质量零食','无运动','胃里没消化','司美格鲁肽'],
+      expectedWeightChange:{min:0.2,max:1.0}, mainCauses:['钠、水分、糖原和胃肠内容物'], fatGainLikely:false,
+      explanation:'零食后上涨可能来自钠、水分、糖原和胃肠内容物，若总热量未明显超出维持，不应判定为真实长脂肪。',
+      suggestion:'正常吃三餐，不需要额外节食补偿。', matchedCount:0, successCount:0, accuracy:null },
+    { id:'strength_training_water_retention', title:'力量训练后体重不降或上涨',
+      coreTriggers:['力量训练'], optionalTriggers:['体重上涨','体重持平','疲劳较高'],
+      expectedWeightChange:{min:-0.2,max:0.6}, mainCauses:['肌肉修复','炎症反应','糖原储水'], fatGainLikely:false,
+      explanation:'力量训练后可能因肌肉修复、炎症反应和糖原储水导致短期不降或上涨。',
+      suggestion:'继续保持训练节奏，体重短期波动是正常的恢复反应。', matchedCount:0, successCount:0, accuracy:null,
+      primaryOnlyIf:{field:'weight.change_kg',op:'>=',value:0} },
+    { id:'long_water_exercise_weight_drop', title:'长时间水中运动后体重下降',
+      coreTriggers:['水中运动','长时间运动','体重下降'], optionalTriggers:[],
+      expectedWeightChange:{min:-1.0,max:-0.2}, mainCauses:['运动消耗较高','对关节冲击低'], fatGainLikely:false,
+      explanation:'长时间水中运动消耗较高，对关节冲击较低，可能促进体重下降和身体恢复。',
+      suggestion:'保持水分和蛋白质摄入，帮助恢复。', matchedCount:0, successCount:0, accuracy:null },
+    { id:'semaglutide_appetite_drop', title:'司美格鲁肽导致食欲下降',
+      coreTriggers:['司美格鲁肽','食欲下降'], optionalTriggers:['便秘'],
+      expectedWeightChange:{min:-1.0,max:-0.1}, mainCauses:['药物降低饥饿感和食物奖励感'], fatGainLikely:false,
+      explanation:'司美格鲁肽可能降低饥饿感和食物奖励感，但仍需保证蛋白质、水和基本营养。',
+      suggestion:'即使食欲不高，也尽量保证蛋白质和水分摄入。', matchedCount:0, successCount:0, accuracy:null },
+    { id:'semaglutide_constipation', title:'司美格鲁肽相关便秘',
+      coreTriggers:['司美格鲁肽','便秘'], optionalTriggers:[],
+      expectedWeightChange:{min:0.1,max:0.8}, mainCauses:['胃排空和肠道蠕动减慢'], fatGainLikely:false,
+      explanation:'司美格鲁肽可能减慢胃排空和肠道蠕动，需要关注水、蔬菜、膳食纤维摄入。',
+      suggestion:'增加膳食纤维和水分，必要时和医生沟通。', matchedCount:0, successCount:0, accuracy:null },
+    { id:'low_calorie_risk', title:'热量过低风险',
+      coreTriggers:['热量过低'], optionalTriggers:['司美格鲁肽','疲劳较高'],
+      expectedWeightChange:{min:-1.2,max:-0.1}, mainCauses:['热量缺口过大'], fatGainLikely:false,
+      explanation:'热量摄入过低可能导致短期内体重下降，但长期过低可能影响肌肉、头发和恢复。v1.5 暂无营养估算，coreTriggers 目前基本不会命中，等有热量估算数据后会自然生效。',
+      suggestion:'适当保证优质蛋白和总热量，避免长期过低。', matchedCount:0, successCount:0, accuracy:null },
+    { id:'high_protein_low_fiber_constipation', title:'高蛋白低纤维便秘',
+      coreTriggers:['便秘'], optionalTriggers:['高脂健康食物'],
+      expectedWeightChange:{min:0.1,max:0.6}, mainCauses:['蛋白高但纤维和水不足'], fatGainLikely:false,
+      explanation:'蛋白质摄入较高但纤维和水不足时容易便秘，体重可能因胃肠内容物短期偏高。',
+      suggestion:'增加蔬菜、全谷物和水分摄入。', matchedCount:0, successCount:0, accuracy:null },
+    { id:'positive_review_after_weight_drop', title:'体重下降后的正向复盘',
+      coreTriggers:['体重下降'], optionalTriggers:[],
+      expectedWeightChange:{min:-1.0,max:-0.1}, mainCauses:['行为正向积累'], fatGainLikely:false,
+      explanation:'体重下降也要分析哪些行为有效，帮助继续保持，而不是只说"很好"。',
+      suggestion:'记录下今天做对的事情，明天继续保持。', matchedCount:0, successCount:0, accuracy:null },
+    { id:'menstrual_water_fluctuation', title:'经前/经期体重波动',
+      coreTriggers:['女性周期水分波动'], optionalTriggers:['体重上涨','体重持平','疲劳较高'],
+      expectedWeightChange:{min:0.2,max:1.5}, mainCauses:['激素变化导致水钠潴留'], fatGainLikely:false,
+      explanation:'经前或经期可能导致水分潴留和食欲变化，不应过度调整饮食。',
+      suggestion:'正常饮食即可，不需要因为这几天的体重波动而节食。', matchedCount:0, successCount:0, accuracy:null },
+    { id:'poor_sleep_weight_fluctuation', title:'睡眠不足导致体重波动',
+      coreTriggers:['睡眠不足'], optionalTriggers:['体重上涨','疲劳较高'],
+      expectedWeightChange:{min:-0.2,max:0.8}, mainCauses:['压力激素和食欲调节紊乱'], fatGainLikely:false,
+      explanation:'睡眠不足可能影响水分、食欲、压力和恢复，使体重短期波动。',
+      suggestion:'今晚尽量早点休息，恢复优先。', matchedCount:0, successCount:0, accuracy:null },
+    { id:'knee_pain_exercise_adjustment', title:'膝盖不适后的运动降级',
+      coreTriggers:['膝盖不适'], optionalTriggers:['长时间运动'],
+      expectedWeightChange:{min:-0.3,max:0.3}, mainCauses:['关节冲击积累'], fatGainLikely:false,
+      explanation:'膝盖不适时，建议降低冲击强度，优先选择休息、水中运动或低冲击活动。',
+      suggestion:'明天选择低冲击运动或休息，观察膝盖恢复情况。', matchedCount:0, successCount:0, accuracy:null },
+    { id:'semaglutide_sodium_undigested', title:'司美格鲁肽+高钠+胃里没消化导致体重不降或上涨',
+      coreTriggers:['司美格鲁肽','高钠','胃里没消化'], optionalTriggers:['加工食品','电影零食','便秘'],
+      expectedWeightChange:{min:0.2,max:0.6}, mainCauses:['胃排空减慢','胃肠内容物和水分滞留'], fatGainLikely:false,
+      explanation:'司美格鲁肽期间叠加高钠和胃里没消化，次日体重可能因胃肠内容物和水分滞留而上涨或不降，不应优先判断为脂肪增加。',
+      suggestion:'GLP-1类药物期间尽量少吃高钠/加工食品，细嚼慢咽，观察消化情况；体重短期波动不代表脂肪增加，不需要额外节食。',
+      matchedCount:0, successCount:0, accuracy:null,
+      requireAnyOf:['胃里没消化','胃排空慢','腹胀','便秘','恶心'] }
+  ];
+
+  // ================================================================
+  // 规则库持久化架构
+  // DEFAULT_REVIEW_RULES 只用于"首次初始化"和"恢复默认"，
+  // 运行时所有读写都通过 loadRules()/saveRules() 走 localStorage，
+  // 代码本身不再是"正式规则库"的来源。
+  // ================================================================
+  const RULES_KEY = 'bodyReview_rules';
+  const CANDIDATES_KEY = 'bodyReview_candidateRules';
+
+  function normalizeRule(rule, now){
+    return {
+      id: rule.id,
+      title: rule.title,
+      coreTriggers: Array.isArray(rule.coreTriggers) ? rule.coreTriggers : [],
+      optionalTriggers: Array.isArray(rule.optionalTriggers) ? rule.optionalTriggers : [],
+      requireAnyOf: Array.isArray(rule.requireAnyOf) ? rule.requireAnyOf : [],
+      primaryOnlyIf: rule.primaryOnlyIf || null,
+      expectedWeightChange: rule.expectedWeightChange || {min:null,max:null},
+      mainCauses: rule.mainCauses || [],
+      fatGainLikely: rule.fatGainLikely != null ? rule.fatGainLikely : false,
+      explanation: rule.explanation || '',
+      suggestion: rule.suggestion || '',
+      version: rule.version || '1.0',
+      createdAt: rule.createdAt || now,
+      updatedAt: now,
+      matchedCount: rule.matchedCount != null ? rule.matchedCount : 0,
+      successCount: rule.successCount != null ? rule.successCount : 0,
+      accuracy: rule.accuracy != null ? rule.accuracy : null
+    };
+  }
+
+  function initDefaultRules(){
+    const now = new Date().toISOString();
+    const rules = DEFAULT_REVIEW_RULES.map(r => normalizeRule(r, now));
+    saveRules(rules);
+    return rules;
+  }
+
+  function loadRules(){
+    try {
+      const raw = localStorage.getItem(RULES_KEY);
+      if (!raw) return initDefaultRules();
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed) || parsed.length === 0) return initDefaultRules();
+      return parsed;
+    } catch(e){ return initDefaultRules(); }
+  }
+  function saveRules(list){
+    try { localStorage.setItem(RULES_KEY, JSON.stringify(list)); } catch(e){}
+  }
+
+  // ---- 规则 CRUD（供未来规则编辑器 UI 调用，写入都落到 localStorage）----
+  function addRule(rule){
+    const now = new Date().toISOString();
+    const list = loadRules();
+    list.push(normalizeRule(rule, now));
+    saveRules(list);
+    return list;
+  }
+  function updateRule(id, patch){
+    const now = new Date().toISOString();
+    const list = loadRules().map(r => r.id === id ? normalizeRule({...r, ...patch, id}, now) : r);
+    saveRules(list);
+    return list;
+  }
+  function deleteRule(id){
+    const list = loadRules().filter(r => r.id !== id);
+    saveRules(list);
+    return list;
+  }
+
+  // ---- 候选规则（独立存储；v1.5 起支持"只读种子+展示"，完整生成/验证引擎留到 v2.0）----
+  const DEFAULT_CANDIDATE_RULES = [
+    {
+      id: 'candidate_semaglutide_high_fat_sodium_undigested',
+      status: 'candidate',
+      scenario: '司美格鲁肽 + 高脂/高钠食物 + 胃里没消化',
+      possibleTriggers: ['司美格鲁肽','高钠','胃里没消化','胃排空慢'],
+      observedOutcome: '预测下降(-1.4~-0.1kg)，实际上涨0.9kg',
+      hypothesis: '司美格鲁肽会减慢胃排空，叠加高脂/高钠饮食后，胃肠内容物和水分滞留可能导致次日体重上涨或不降，不应默认判断为脂肪增加。',
+      suggestedRule: {
+        title: '司美格鲁肽+高脂高钠食物+胃里没消化',
+        coreTriggers: ['司美格鲁肽','高钠','胃里没消化'],
+        optionalTriggers: ['胃排空慢','电影零食','高脂低质量零食'],
+        expectedWeightChange: { min:0.2, max:1.1 },
+        explanation: '次日体重可能上涨或不降，主要来自胃肠内容物和水分滞留，而不是脂肪增加。',
+        suggestion: '正常饮食即可，不需要因此节食；如果胃胀/没消化持续，注意放慢进食速度、减少高脂食物。'
+      },
+      sourceRecordIds: [],
+      similarCount: 1,
+      createdAt: '2026-07-07'
+    }
+  ];
+  function initDefaultCandidates(){
+    saveCandidateRules(DEFAULT_CANDIDATE_RULES);
+    return DEFAULT_CANDIDATE_RULES;
+  }
+  function loadCandidateRules(){
+    try {
+      const raw = localStorage.getItem(CANDIDATES_KEY);
+      if (!raw) return initDefaultCandidates();
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return initDefaultCandidates();
+      return parsed;
+    } catch(e){ return initDefaultCandidates(); }
+  }
+  function saveCandidateRules(list){
+    try { localStorage.setItem(CANDIDATES_KEY, JSON.stringify(list)); } catch(e){}
+  }
+  function renderCandidateRulesList(){
+    const container = $('candidateRulesList');
+    if (!container) return;
+    const list = loadCandidateRules();
+    if (list.length === 0) { container.innerHTML = '<div class="hist-empty">暂无候选规则。</div>'; return; }
+    container.innerHTML = list.map(c => `
+      <div class="rule-card" style="border-left-color:var(--amber);">
+        <div class="rule-title">🧩 ${escapeHtml(c.scenario || c.suggestedRule?.title || c.id)}</div>
+        <div class="rule-meta">可能触发条件：${(c.possibleTriggers||[]).map(escapeHtml).join('、') || '无'}</div>
+        <div style="margin-top:6px;">${escapeHtml(c.hypothesis || '')}</div>
+        <div class="rule-meta" style="margin-top:6px;">观察到的结果：${escapeHtml(c.observedOutcome || '')}</div>
+        <div class="rule-meta">出现次数：${c.similarCount || 1}　｜　状态：候选（尚未转正）</div>
+      </div>
+    `).join('');
+  }
+
+  // ---- 导入校验 ----
+  function validateRulesArray(arr){
+    if (!Array.isArray(arr)) return { valid:false, error:'不是一个数组（JSON 最外层必须是 []）。' };
+    if (arr.length === 0) return { valid:false, error:'数组为空，没有可导入的规则。' };
+    for (let i=0;i<arr.length;i++){
+      const r = arr[i];
+      if (!r || typeof r !== 'object') return { valid:false, error:`第 ${i+1} 条不是有效对象。` };
+      if (!r.id) return { valid:false, error:`第 ${i+1} 条缺少 id 字段。` };
+      if (!r.title) return { valid:false, error:`第 ${i+1} 条（id: ${r.id}）缺少 title 字段。` };
+      if (!Array.isArray(r.coreTriggers)) return { valid:false, error:`第 ${i+1} 条（id: ${r.id}）缺少 coreTriggers 数组。` };
+      if (!Array.isArray(r.optionalTriggers)) return { valid:false, error:`第 ${i+1} 条（id: ${r.id}）缺少 optionalTriggers 数组。` };
+    }
+    return { valid:true };
+  }
+  function mergeRulesList(current, incoming){
+    const now = new Date().toISOString();
+    const byId = {};
+    current.forEach(r => byId[r.id] = r);
+    incoming.forEach(r => {
+      const existing = byId[r.id];
+      byId[r.id] = normalizeRule({ ...r, createdAt: (existing && existing.createdAt) || r.createdAt }, now);
+    });
+    return Object.values(byId);
+  }
+
+  // ================================================================
+  // TAG_RULES：可配置的自动打标签规则
+  // 代码只负责"读取字段/关键词 → 判断条件是否成立"这套通用引擎；
+  // 具体每条标签认什么关键词、看哪些字段，全部是数据（JSON），
+  // 存在 localStorage['bodyReview_tagRules'] 里，不写死在业务逻辑中。
+  // ================================================================
+  const TAGRULES_KEY = 'bodyReview_tagRules';
+
+  const DEFAULT_TAG_RULES = [
+    { id:'tag_sodium_keyword', tag:'高钠', matchFields:['meals'], keywords:['高钠','咸','腌','酱油','卤','香肠','培根','午餐肉','方便面','外卖','火锅','加工肉'], conditions:[], source:'default', enabled:true },
+    { id:'tag_sodium_chip', tag:'高钠', matchFields:[], keywords:[], conditions:[{field:'special.selected',op:'includes',value:'吃咸'}], source:'default', enabled:true },
+    { id:'tag_processed_food', tag:'加工食品', matchFields:['meals'], keywords:['加工','香肠','培根','午餐肉','方便面','外卖','卤味','加工肉','火腿'], conditions:[], source:'default', enabled:true },
+    { id:'tag_snack_present', tag:'零食', matchFields:[], keywords:[], conditions:[{field:'meals.snack',op:'notEmpty'}], source:'default', enabled:true },
+    { id:'tag_healthy_fat', tag:'高脂健康食物', matchFields:['meals'], keywords:['坚果','核桃','牛油果','三文鱼','花生','芝麻酱','鸡蛋'], conditions:[], source:'default', enabled:true },
+    { id:'tag_lowqual_fat_snack', tag:'高脂低质量零食', matchFields:['meals'], keywords:['薯条','炸鸡','蛋糕','奶茶','巧克力','饼干','甜点'], conditions:[], source:'default', enabled:true },
+    { id:'tag_movie_snack_chip', tag:'电影零食', matchFields:[], keywords:[], conditions:[{field:'special.selected',op:'includes',value:'看电影'},{field:'_computed.has_food_today',op:'==',value:true}], source:'default', enabled:true },
+    { id:'tag_movie_snack_note', tag:'电影零食', matchFields:['special_note'], keywords:['电影'], conditions:[{field:'_computed.has_food_today',op:'==',value:true}], source:'default', enabled:true },
+    { id:'tag_no_exercise', tag:'无运动', matchFields:[], keywords:[], conditions:[{field:'exercise_text',op:'empty'}], source:'default', enabled:true },
+    { id:'tag_constipation_status', tag:'便秘', matchFields:[], keywords:[], conditions:[{field:'bowel.status',op:'==',value:'便秘'}], source:'default', enabled:true },
+    { id:'tag_constipation_score', tag:'便秘', matchFields:[], keywords:[], conditions:[{field:'subjective.constipation_score',op:'>=',value:5}], source:'default', enabled:true },
+    { id:'tag_bloating_score', tag:'腹胀', matchFields:[], keywords:[], conditions:[{field:'subjective.bloating_score',op:'>=',value:4}], source:'default', enabled:true },
+    { id:'tag_nausea_score', tag:'恶心', matchFields:[], keywords:[], conditions:[{field:'subjective.nausea_score',op:'>=',value:4}], source:'default', enabled:true },
+    { id:'tag_semaglutide', tag:'司美格鲁肽', matchFields:[], keywords:[], conditions:[{field:'medication.semaglutide_using',op:'==',value:'是'}], source:'default', enabled:true },
+    { id:'tag_appetite_low', tag:'食欲下降', matchFields:[], keywords:[], conditions:[{field:'subjective.appetite_score',op:'<=',value:3}], source:'default', enabled:true },
+    { id:'tag_hunger_low', tag:'饥饿感下降', matchFields:[], keywords:[], conditions:[{field:'subjective.hunger_score',op:'<=',value:3}], source:'default', enabled:true },
+    { id:'tag_food_craving_high', tag:'食物欲望较高', matchFields:[], keywords:[], conditions:[{field:'subjective.appetite_score',op:'>=',value:7}], source:'default', enabled:true },
+    { id:'tag_food_craving_text', tag:'食物欲望较高', matchFields:['subjective_note','special_note','bodyfeel_note'], keywords:['嘴馋','想吃','馋','不饿但想吃','不饿但是想吃','食欲强','很想吃东西'], conditions:[], source:'default', enabled:true },
+    { id:'tag_hunger_score', tag:'感觉到饥饿', matchFields:[], keywords:[], conditions:[{field:'subjective.hunger_score',op:'>=',value:7}], source:'default', enabled:true },
+    { id:'tag_hunger_text', tag:'感觉到饥饿', matchFields:['bodyfeel_note','subjective_note','special_note'], keywords:['饥饿','很饿','饿','睡前饥饿','下午饥饿','半夜饿','想吃东西'], conditions:[], source:'default', enabled:true },
+    { id:'tag_stomach_undigested', tag:'胃里没消化', matchFields:['subjective_note','special_note','bodyfeel_note'], keywords:['没消化','不消化','积食','胃胀','胃里不适'], conditions:[], source:'default', enabled:true },
+    { id:'tag_slow_gastric_emptying', tag:'胃排空慢', matchFields:['subjective_note','special_note','bodyfeel_note'], keywords:['排空','消化慢','不消化','胃动力','胃排空'], conditions:[], source:'default', enabled:true },
+    { id:'tag_movie_snack_combo', tag:'电影零食', matchFields:[], keywords:[], conditions:[{field:'special.selected',op:'includes',value:'看电影'},{field:'special.selected',op:'includes',value:'吃咸'}], source:'default', enabled:true },
+    { id:'tag_weight_up', tag:'体重上涨', matchFields:[], keywords:[], conditions:[{field:'weight.change_kg',op:'>',value:0}], source:'default', enabled:true },
+    { id:'tag_weight_down', tag:'体重下降', matchFields:[], keywords:[], conditions:[{field:'weight.change_kg',op:'<',value:0}], source:'default', enabled:true },
+    { id:'tag_weight_flat', tag:'体重持平', matchFields:[], keywords:[], conditions:[{field:'weight.change_kg',op:'==',value:0}], source:'default', enabled:true },
+    { id:'tag_long_exercise', tag:'长时间运动', matchFields:[], keywords:[], conditions:[{field:'exercise_text',op:'durationMinutesGte',value:90}], source:'default', enabled:true },
+    { id:'tag_water_exercise', tag:'水中运动', matchFields:['exercise_text'], keywords:['游泳','浮潜'], conditions:[], source:'default', enabled:true },
+    { id:'tag_strength_training', tag:'力量训练', matchFields:['exercise_text'], keywords:['力量','举铁','深蹲','卧推','器械','背部训练','胸部训练','腿部训练','臀腿训练','肩部训练','手臂训练','器械训练','抗阻训练','无氧训练','哑铃','杠铃','固定器械'], conditions:[], source:'default', enabled:true },
+    { id:'tag_knee_pain', tag:'膝盖不适', matchFields:[], keywords:[], conditions:[{field:'subjective.knee_pain_score',op:'>=',value:4}], source:'default', enabled:true },
+    { id:'tag_high_fatigue', tag:'疲劳较高', matchFields:[], keywords:[], conditions:[{field:'subjective.fatigue_score',op:'>=',value:6}], source:'default', enabled:true },
+    { id:'tag_menstrual_pre', tag:'女性周期水分波动', matchFields:[], keywords:[], conditions:[{field:'menstrual_status',op:'==',value:'经前'}], source:'default', enabled:true },
+    { id:'tag_menstrual_during', tag:'女性周期水分波动', matchFields:[], keywords:[], conditions:[{field:'menstrual_status',op:'==',value:'经期'}], source:'default', enabled:true },
+    { id:'tag_poor_sleep', tag:'睡眠不足', matchFields:[], keywords:[], conditions:[{field:'sleep.duration_min',op:'<',value:360}], source:'default', enabled:true }
+  ];
+
+  function initDefaultTagRules(){ saveTagRules(DEFAULT_TAG_RULES); return DEFAULT_TAG_RULES; }
+  function loadTagRules(){
+    try {
+      const raw = localStorage.getItem(TAGRULES_KEY);
+      if (!raw) return initDefaultTagRules();
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed) || parsed.length === 0) return initDefaultTagRules();
+      return parsed;
+    } catch(e){ return initDefaultTagRules(); }
+  }
+  function saveTagRules(list){ try { localStorage.setItem(TAGRULES_KEY, JSON.stringify(list)); } catch(e){} }
+
+  function escapeRegex(s){ return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+  // ---- 通用条件求值（TAG_RULES 和 PREDICTION_MODIFIERS 共用思路）----
+  function evaluateCondition(record, cond){
+    const val = getPath(record, cond.field);
+    switch(cond.op){
+      case '<=': return val != null && Number(val) <= cond.value;
+      case '>=': return val != null && Number(val) >= cond.value;
+      case '<': return val != null && Number(val) < cond.value;
+      case '>': return val != null && Number(val) > cond.value;
+      case '==': return val === cond.value;
+      case '!=': return val !== cond.value;
+      case 'includes': return Array.isArray(val) ? val.includes(cond.value) : (typeof val === 'string' && val.includes(cond.value));
+      case 'notEmpty': return val != null && String(val).trim() !== '';
+      case 'empty': return val == null || String(val).trim() === '';
+      case 'durationMinutesGte': {
+        const text = String(val || '');
+        let minutes = 0;
+        const hourMatch = text.match(/(\d+(\.\d+)?)\s*(小时|h)/);
+        const minMatch = text.match(/(\d+)\s*(分钟|min)/);
+        if (hourMatch) minutes += parseFloat(hourMatch[1]) * 60;
+        if (minMatch) minutes += parseInt(minMatch[1]);
+        return minutes >= cond.value;
+      }
+      default: return false;
+    }
+  }
+  // matchFields 支持的字段名 → 从 record 里取文本的方式
+  function getFieldText(record, key){
+    switch(key){
+      case 'meals': return Object.values(record.meals || {}).join(' ');
+      case 'exercise_text': return record.exercise_text || '';
+      case 'subjective_note': return record.subjective.note || '';
+      case 'special_note': return record.special.note || '';
+      case 'bodyfeel_note': return (record.bodyFeel && record.bodyFeel.note) || '';
+      default: { const v = getPath(record, key); return v == null ? '' : String(v); }
+    }
+  }
+  function evaluateTagRule(rule, record){
+    if (rule.enabled === false) return false;
+    const hasKeywords = rule.keywords && rule.keywords.length;
+    const hasConditions = rule.conditions && rule.conditions.length;
+    if (!hasKeywords && !hasConditions) return false;
+    let keywordMatch = true;
+    if (hasKeywords) {
+      const text = (rule.matchFields || []).map(f => getFieldText(record, f)).join(' ');
+      const re = new RegExp(rule.keywords.map(escapeRegex).join('|'));
+      keywordMatch = re.test(text);
+    }
+    let condMatch = true;
+    if (hasConditions) condMatch = rule.conditions.every(c => evaluateCondition(record, c));
+    return keywordMatch && condMatch;
+  }
+  function validateTagRulesArray(arr){
+    if (!Array.isArray(arr)) return { valid:false, error:'不是一个数组。' };
+    if (arr.length === 0) return { valid:false, error:'数组为空。' };
+    for (let i=0;i<arr.length;i++){
+      const r = arr[i];
+      if (!r || typeof r !== 'object') return { valid:false, error:`第 ${i+1} 条不是有效对象。` };
+      if (!r.id) return { valid:false, error:`第 ${i+1} 条缺少 id 字段。` };
+      if (!r.tag) return { valid:false, error:`第 ${i+1} 条（id: ${r.id}）缺少 tag 字段。` };
+    }
+    return { valid:true };
+  }
+  function mergeTagRules(current, incoming){
+    const byId = {};
+    current.forEach(r => byId[r.id] = r);
+    incoming.forEach(r => byId[r.id] = { matchFields:[], keywords:[], conditions:[], enabled:true, source:'imported', ...r });
+    return Object.values(byId);
+  }
+
+  // ================================================================
+  // PREDICTION_MODIFIERS：可配置的体重预测修正项
+  // predictWeightChange() 先从匹配到的规则里取一个基础区间，
+  // 再逐条应用这里配置的修正项（只有当 record.tags 同时包含
+  // triggers 里的所有标签时才生效），最终区间和原因文案都来自数据。
+  // ================================================================
+  const MODIFIERS_KEY = 'bodyReview_predictionModifiers';
+
+  const DEFAULT_PREDICTION_MODIFIERS = [
+    { id:'mod_sodium_constipation', triggers:['高钠','便秘'], adjustMin:0, adjustMax:0.3, reason:'高钠+便秘，短期上涨范围加大。', enabled:true },
+    { id:'mod_semaglutide_appetite_drop', triggers:['司美格鲁肽','食欲下降'], adjustMin:-0.2, adjustMax:0, reason:'司美格鲁肽+食欲下降，偏向下降，注意别长期热量过低。', enabled:true },
+    { id:'mod_menstrual_water', triggers:['女性周期水分波动'], adjustMin:0, adjustMax:0.3, reason:'经期/经前，水分波动增加，不代表脂肪变化。', enabled:true },
+    { id:'mod_knee_pain_note', triggers:['膝盖不适'], adjustMin:0, adjustMax:0, reason:'膝盖不适评分较高，建议明天降低运动冲击。', enabled:true },
+    { id:'mod_fatigue_note', triggers:['疲劳较高'], adjustMin:0, adjustMax:0, reason:'疲劳评分较高，建议明天以恢复为主。', enabled:true },
+    { id:'mod_semaglutide_sodium_undigested', triggers:['司美格鲁肽','高钠','胃里没消化'], adjustMin:0.2, adjustMax:0.6, reason:'司美格鲁肽期间叠加高钠和胃里没消化，次日体重可能因胃肠内容物和水分滞留而上涨或不降。', enabled:true }
+  ];
+
+  function initDefaultModifiers(){ saveModifiers(DEFAULT_PREDICTION_MODIFIERS); return DEFAULT_PREDICTION_MODIFIERS; }
+  function loadModifiers(){
+    try {
+      const raw = localStorage.getItem(MODIFIERS_KEY);
+      if (!raw) return initDefaultModifiers();
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed) || parsed.length === 0) return initDefaultModifiers();
+      return parsed;
+    } catch(e){ return initDefaultModifiers(); }
+  }
+  function saveModifiers(list){ try { localStorage.setItem(MODIFIERS_KEY, JSON.stringify(list)); } catch(e){} }
+  function validateModifiersArray(arr){
+    if (!Array.isArray(arr)) return { valid:false, error:'不是一个数组。' };
+    if (arr.length === 0) return { valid:false, error:'数组为空。' };
+    for (let i=0;i<arr.length;i++){
+      const r = arr[i];
+      if (!r || typeof r !== 'object') return { valid:false, error:`第 ${i+1} 条不是有效对象。` };
+      if (!r.id) return { valid:false, error:`第 ${i+1} 条缺少 id 字段。` };
+      if (!Array.isArray(r.triggers) || r.triggers.length === 0) return { valid:false, error:`第 ${i+1} 条（id: ${r.id}）缺少 triggers 数组。` };
+    }
+    return { valid:true };
+  }
+  function mergeModifiers(current, incoming){
+    const byId = {};
+    current.forEach(r => byId[r.id] = r);
+    incoming.forEach(r => byId[r.id] = { adjustMin:0, adjustMax:0, reason:'', enabled:true, ...r });
+    return Object.values(byId);
+  }
+
+  function refreshRuleCount(){
+    const rules = loadRules();
+    const candidates = loadCandidateRules();
+    const el = $('ruleCount');
+    if (el) el.textContent = `${rules.length} 条正式规则 ｜ ${candidates.length} 条候选规则`;
+    renderCandidateRulesList();
+    const tagRules = loadTagRules();
+    const tagEl = $('tagRuleCount');
+    if (tagEl) tagEl.textContent = `${tagRules.length} 条标签规则`;
+    const modifiers = loadModifiers();
+    const modEl = $('modifierCount');
+    if (modEl) modEl.textContent = `${modifiers.length} 条预测修正规则`;
+  }
+
+  // ---- state ----
+  let currentRecord = createEmptyRecord();
+  let currentTags = new Set();   // 当前展示/最终使用的标签（每次都会重新计算，不再累加）
+  let manualTags = new Set();    // 用户手动添加的标签，持续保留直到用户自己删除
+  let excludedTags = new Set();  // 用户删除过的自动标签，本次先不显示；下次重新生成时会恢复
+
+  // 每次"生成标签"/"生成复盘"/"复制给ChatGPT"都调这个：重新算 autoTags，
+  // 和 manualTags 合并，再刨掉 excludedTags，得到这一次真正要用的标签。
+  function recomputeTags(record){
+    const autoTags = extractTags(record);
+    const final = new Set([...autoTags, ...manualTags]);
+    excludedTags.forEach(t => final.delete(t));
+    currentTags = final;
+    return [...currentTags];
+  }
+
+  $('dateLine').textContent = new Date().toLocaleDateString('zh-CN', {year:'numeric',month:'2-digit',day:'2-digit',weekday:'short'});
+
+  // ---- 个人信息 ----
+  const userNameInput = $('userName'), userAgeInput = $('userAge'), greeting = $('greeting');
+  function loadProfile(){ try { return JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}'); } catch(e){ return {}; } }
+  function saveProfile(){
+    try { localStorage.setItem(PROFILE_KEY, JSON.stringify({ name:userNameInput.value.trim(), age:userAgeInput.value.trim() })); } catch(e){}
+    updateGreeting();
+  }
+  function updateGreeting(){
+    const name = userNameInput.value.trim();
+    greeting.textContent = name ? `你好，${name}` : '身体复盘';
+  }
+  (function initProfile(){
+    const p = loadProfile();
+    userNameInput.value = p.name || ''; userAgeInput.value = p.age || '';
+    updateGreeting();
+  })();
+  [userNameInput, userAgeInput].forEach(el => el.addEventListener('input', saveProfile));
+
+  // ---- LCD 体重 ----
+  const todayWeight = $('todayWeight'), yestWeight = $('yestWeight');
+  const lcdWeight = $('lcdWeight'), lcdDelta = $('lcdDelta'), autoFillHint = $('autoFillHint');
+  function refreshLcd(){
+    const t = parseFloat(todayWeight.value), y = parseFloat(yestWeight.value);
+    lcdWeight.textContent = isNaN(t) ? '--.-' : t.toFixed(1);
+    lcdWeight.classList.remove('flicker'); void lcdWeight.offsetWidth; lcdWeight.classList.add('flicker');
+    if (!isNaN(t) && !isNaN(y)) {
+      const diff = Math.round((t - y) * 10) / 10;
+      lcdDelta.classList.remove('good','alert');
+      if (diff < 0) { lcdDelta.textContent = '▼ ' + Math.abs(diff).toFixed(1) + ' kg'; lcdDelta.classList.add('good'); }
+      else if (diff > 0) { lcdDelta.textContent = '▲ ' + diff.toFixed(1) + ' kg'; lcdDelta.classList.add('alert'); }
+      else { lcdDelta.textContent = '— 持平'; }
+    } else { lcdDelta.innerHTML = '&nbsp;'; }
+  }
+  todayWeight.addEventListener('input', refreshLcd);
+  yestWeight.addEventListener('input', refreshLcd);
+
+  (function autoFillYesterday(){
+    const list = loadHistory();
+    if (list.length > 0 && list[0].weight && list[0].weight.today_kg != null) {
+      yestWeight.value = list[0].weight.today_kg;
+      autoFillHint.style.display = 'block';
+      refreshLcd();
+    }
+  })();
+
+  // ---- 睡眠 ----
+  const sleepStart = $('sleepStart'), sleepEnd = $('sleepEnd'), sleepDuration = $('sleepDuration');
+  function refreshSleep(){
+    const [sh, sm] = sleepStart.value.split(':').map(Number);
+    const [eh, em] = sleepEnd.value.split(':').map(Number);
+    if (isNaN(sh) || isNaN(eh)) { sleepDuration.textContent = ''; return; }
+    let startMin = sh*60+sm, endMin = eh*60+em;
+    if (endMin <= startMin) endMin += 24*60;
+    const total = endMin - startMin;
+    sleepDuration.textContent = Math.floor(total/60) + 'h' + String(total%60).padStart(2,'0') + 'm';
+  }
+  sleepStart.addEventListener('input', refreshSleep);
+  sleepEnd.addEventListener('input', refreshSleep);
+  refreshSleep();
+
+  // ---- chip / radio 通用绑定 ----
+  function bindMultiChip(groupId, targetSet){
+    $(groupId).addEventListener('click', e => {
+      const chip = e.target.closest('.chip');
+      if (!chip) return;
+      chip.classList.toggle('active');
+      const v = chip.dataset.value;
+      if (chip.classList.contains('active')) targetSet.add(v); else targetSet.delete(v);
+    });
+  }
+  function bindRadioChip(groupId, onSelect){
+    const group = $(groupId);
+    group.addEventListener('click', e => {
+      const chip = e.target.closest('.radio-chip');
+      if (!chip) return;
+      Array.from(group.children).forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      onSelect(chip.dataset.value);
+    });
+  }
+  let specialValues = new Set(), bodyFeelValues = new Set();
+  let bowelValue = '', semaglutideUsingValue = '', semaglutideDoseValue = '', menstrualStatusValue = '';
+  bindMultiChip('specialGroup', specialValues);
+  bindMultiChip('bodyGroup', bodyFeelValues);
+  bindRadioChip('bowelGroup', v => bowelValue = v);
+  bindRadioChip('menstrualStatusGroup', v => menstrualStatusValue = v);
+  bindRadioChip('semaglutideUsingGroup', v => semaglutideUsingValue = v);
+  bindRadioChip('semaglutideDoseGroup', v => semaglutideDoseValue = v);
+
+  ['hungerScore','appetiteScore','nauseaScore','bloatingScore','constipationScore','fatigueScore','kneePainScore'].forEach(id => {
+    const el = $(id), val = $(id + 'Val');
+    el.addEventListener('input', () => { val.textContent = el.value; });
+  });
+
+  // ---- AI 接口设置 ----
+  const baseUrlInput = $('baseUrl'), modelInput = $('modelName'), visionModelInput = $('visionModel'), apiKeyInput = $('apiKey');
+  function loadSettings(){ try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); } catch(e){ return {}; } }
+  function saveSettings(){
+    try {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify({
+        baseUrl: baseUrlInput.value.trim(), model: modelInput.value.trim(),
+        visionModel: visionModelInput.value.trim(), apiKey: apiKeyInput.value.trim()
+      }));
+    } catch(e){}
+  }
+  (function initSettings(){
+    const s = loadSettings();
+    baseUrlInput.value = s.baseUrl || 'https://api.openai.com/v1/chat/completions';
+    modelInput.value = s.model || 'gpt-5.4-mini';
+    visionModelInput.value = s.visionModel || 'gpt-5.4-mini';
+    apiKeyInput.value = s.apiKey || '';
+  })();
+  [baseUrlInput, modelInput, visionModelInput, apiKeyInput].forEach(el => el.addEventListener('input', saveSettings));
+  $('clearKeyBtn').addEventListener('click', () => {
+    baseUrlInput.value = 'https://api.openai.com/v1/chat/completions';
+    modelInput.value = 'gpt-5.4-mini';
+    visionModelInput.value = 'gpt-5.4-mini';
+    apiKeyInput.value = '';
+    try { localStorage.removeItem(SETTINGS_KEY); } catch(e){}
+    highlightPreset();
+  });
+  const PRESETS = {
+    openai: { baseUrl:'https://api.openai.com/v1/chat/completions', model:'gpt-5.4-mini', visionModel:'gpt-5.4-mini' },
+    qwen: { baseUrl:'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions', model:'qwen-plus', visionModel:'qwen-vl-plus' }
+  };
+  const presetGroup = $('presetGroup');
+  presetGroup.addEventListener('click', e => {
+    const chip = e.target.closest('.chip');
+    if (!chip) return;
+    const key = chip.dataset.preset;
+    if (PRESETS[key]) {
+      baseUrlInput.value = PRESETS[key].baseUrl;
+      modelInput.value = PRESETS[key].model;
+      visionModelInput.value = PRESETS[key].visionModel;
+      saveSettings();
+    }
+    highlightPreset();
+  });
+  function highlightPreset(){
+    const url = baseUrlInput.value.trim();
+    let match = 'custom';
+    if (url === PRESETS.openai.baseUrl) match = 'openai';
+    else if (url === PRESETS.qwen.baseUrl) match = 'qwen';
+    Array.from(presetGroup.children).forEach(c => c.classList.toggle('active', c.dataset.preset === match));
+  }
+  baseUrlInput.addEventListener('input', highlightPreset);
+
+  // ---- 通用 AI 调用 ----
+  async function callChatAPI({ text, imageBase64, imageType, model, systemPrompt }){
+    const apiKey = apiKeyInput.value.trim();
+    const baseUrl = baseUrlInput.value.trim();
+    if (!apiKey || !baseUrl) throw new Error('请先在下方「AI 接口设置」中填好 Base URL 和 API Key。');
+    const content = [];
+    if (imageBase64) content.push({ type:'image_url', image_url:{ url:`data:${imageType};base64,${imageBase64}` } });
+    content.push({ type:'text', text: text });
+    const messages = [];
+    if (systemPrompt) messages.push({ role:'system', content: systemPrompt });
+    messages.push({ role:'user', content });
+    const resp = await fetch(baseUrl, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + apiKey },
+      body: JSON.stringify({ model: model, messages: messages })
+    });
+    if (!resp.ok) { const t = await resp.text(); throw new Error(`HTTP ${resp.status} ${t.slice(0,150)}`); }
+    const data = await resp.json();
+    const c = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+    if (!c) throw new Error('未收到有效结果');
+    return c;
+  }
+
+  // ---- 拍照识别食物（简单一行文字）----
+  $$('.photo-btn').forEach(btn => {
+    btn.addEventListener('click', () => $(`.photo-file[data-target="${btn.dataset.target}"]`).click());
+  });
+  $$('.photo-file').forEach(fileInput => {
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files[0]) recognizeMealPhoto(fileInput.files[0], fileInput.dataset.target);
+    });
+  });
+  async function recognizeMealPhoto(file, targetId){
+    const targetInput = $(targetId);
+    const btn = document.querySelector(`.photo-btn[data-target="${targetId}"]`);
+    const originalPlaceholder = targetInput.placeholder;
+    targetInput.disabled = true; btn.disabled = true; targetInput.placeholder = '识别中...';
+    clearError();
+    try {
+      const base64 = await fileToBase64(file);
+      const visionModel = visionModelInput.value.trim() || modelInput.value.trim();
+      const prompt = `请识别这张图片中的食物，包括种类、大致重量/份量、热量（kcal）。用简洁的一行中文文字总结，格式类似："燕麦粥(约300g，210kcal) + 煎蛋(1个，90kcal)"。只返回这一行文字，不要任何其他说明。如果没有食物，返回"未识别到食物"。`;
+      const content = await callChatAPI({ text: prompt, imageBase64: base64, imageType: file.type, model: visionModel });
+      targetInput.value = String(content).trim();
+    } catch (err) {
+      console.error(err);
+      showError('拍照识别失败：' + err.message);
+    } finally {
+      targetInput.disabled = false; btn.disabled = false; targetInput.placeholder = originalPlaceholder;
+    }
+  }
+
+  // ---- 标签：extractTags + 编辑 ----
+  function extractTags(record){
+    // 少量必须在评估前算好的"派生字段"，供 TAG_RULES 的 conditions 引用
+    // （比如"当天是否吃了东西"需要综合4个字段，不是单一路径能表达的）
+    record._computed = {
+      has_food_today: Object.values(record.meals || {}).some(v => v && v.trim())
+    };
+    const tags = new Set();
+    loadTagRules().forEach(rule => {
+      if (evaluateTagRule(rule, record)) tags.add(rule.tag);
+    });
+    return [...tags];
+  }
+
+
+  function renderTags(){
+    const container = $('tagsContainer');
+    container.innerHTML = '';
+    [...currentTags].forEach(tag => {
+      const chip = document.createElement('span');
+      chip.className = 'tag-chip';
+      chip.innerHTML = `${escapeHtml(tag)} <button type="button">✕</button>`;
+      chip.querySelector('button').addEventListener('click', () => {
+        currentTags.delete(tag);
+        if (manualTags.has(tag)) {
+          manualTags.delete(tag);           // 手动标签：直接删掉，不会再出现
+        } else {
+          excludedTags.add(tag);            // 自动标签：本次先隐藏，下次重新生成还会再出现
+        }
+        renderTags();
+      });
+      container.appendChild(chip);
+    });
+  }
+  $('generateTagsBtn').addEventListener('click', () => {
+    collectRawRecord();
+    excludedTags.clear();
+    recomputeTags(currentRecord);
+    renderTags();
+  });
+  $('addTagInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.target.value.trim()) {
+      const tag = e.target.value.trim();
+      manualTags.add(tag);
+      excludedTags.delete(tag); // 如果之前被隐藏过，手动加回来时取消隐藏
+      currentTags.add(tag);
+      e.target.value = '';
+      renderTags();
+    }
+  });
+
+  // ---- 收集原始记录 ----
+  function collectRawRecord(){
+    const t = parseFloat(todayWeight.value), y = parseFloat(yestWeight.value);
+    currentRecord.profile = { name: userNameInput.value.trim(), age: userAgeInput.value.trim() };
+    currentRecord.weight = {
+      today_kg: isNaN(t) ? null : t,
+      yesterday_kg: isNaN(y) ? null : y,
+      change_kg: (!isNaN(t) && !isNaN(y)) ? Math.round((t-y)*10)/10 : null
+    };
+    currentRecord.meals = {
+      breakfast: $('breakfast').value, lunch: $('lunch').value,
+      dinner: $('dinner').value, snack: $('snack').value
+    };
+    currentRecord.exercise_text = $('exerciseText').value;
+    currentRecord.sleep = { start: sleepStart.value, end: sleepEnd.value, duration_min: parseSleepMinutes() };
+    currentRecord.bowel = { status: bowelValue };
+    currentRecord.medication = { raw: $('medication').value, semaglutide_using: semaglutideUsingValue, semaglutide_dose: semaglutideDoseValue };
+    currentRecord.menstrual_status = menstrualStatusValue;
+    currentRecord.subjective = {
+      hunger_score: parseInt($('hungerScore').value), appetite_score: parseInt($('appetiteScore').value),
+      nausea_score: parseInt($('nauseaScore').value), bloating_score: parseInt($('bloatingScore').value),
+      constipation_score: parseInt($('constipationScore').value), fatigue_score: parseInt($('fatigueScore').value),
+      knee_pain_score: parseInt($('kneePainScore').value), note: $('subjectiveNote').value
+    };
+    currentRecord.special = { selected: [...specialValues], note: $('specialNote').value };
+    currentRecord.bodyFeel = { selected: [...bodyFeelValues], note: $('bodyNote').value };
+    currentRecord.date = new Date().toISOString().slice(0,10);
+    currentRecord.createdAt = new Date().toLocaleString('zh-CN');
+    return currentRecord;
+  }
+  function parseSleepMinutes(){
+    const [sh, sm] = sleepStart.value.split(':').map(Number);
+    const [eh, em] = sleepEnd.value.split(':').map(Number);
+    if (isNaN(sh) || isNaN(eh)) return null;
+    let startMin = sh*60+sm, endMin = eh*60+em;
+    if (endMin <= startMin) endMin += 24*60;
+    return endMin - startMin;
+  }
+
+  // ---- matchRules ----
+  function matchRules(record, rules){
+    const tags = record.tags || [];
+    const results = rules
+      .filter(rule => {
+        // requireAnyOf：如果规则要求"至少命中以下标签之一"，一个都没命中就直接排除，
+        // 不参与打分，避免只满足 coreTriggers 的比例就被松散地匹配上。
+        if (rule.requireAnyOf && rule.requireAnyOf.length) {
+          return rule.requireAnyOf.some(t => tags.includes(t));
+        }
+        return true;
+      })
+      .map(rule => {
+        const core = rule.coreTriggers || [], optional = rule.optionalTriggers || [];
+        const matchedCore = core.filter(t => tags.includes(t));
+        const matchedOpt = optional.filter(t => tags.includes(t));
+        const missingCore = core.filter(t => !tags.includes(t));
+        const coreRatio = core.length ? matchedCore.length/core.length : 0;
+        const optRatio = optional.length ? matchedOpt.length/optional.length : 0;
+        let score = coreRatio*0.7 + optRatio*0.3;
+
+        // primaryOnlyIf：这条规则只有在满足某个方向性条件时才算"主要解释"；
+        // 条件不满足时大幅降权（不是直接排除，仍可能作为次要因素出现）。
+        // 如果相关字段还没有值（比如预测模式下还不知道实际体重变化），就不做任何降权。
+        if (rule.primaryOnlyIf) {
+          const val = getPath(record, rule.primaryOnlyIf.field);
+          if (val != null && !evaluateCondition(record, rule.primaryOnlyIf)) {
+            score = score * 0.35;
+          }
+        }
+        score = Math.round(score * 100) / 100;
+
+        return {
+          ruleId: rule.id, title: rule.title, matchScore: score,
+          matchLevel: score>=0.7?'high':(score>=0.4?'medium':'low'),
+          matchedTriggers: [...matchedCore, ...matchedOpt], missingTriggers: missingCore,
+          expectedWeightChange: rule.expectedWeightChange, mainCauses: rule.mainCauses,
+          fatGainLikely: rule.fatGainLikely, explanation: rule.explanation, suggestion: rule.suggestion,
+          currentAccuracy: rule.accuracy
+        };
+      }).sort((a,b) => b.matchScore - a.matchScore);
+    let top = results.filter(r => r.matchScore >= 0.4).slice(0,3);
+    let note = '';
+    if (top.length === 0) { top = results.slice(0,3); note = '暂无高匹配规则，规则库可能不足，以下为参考。'; }
+    return { topMatchedRules: top, note };
+  }
+
+  // ---- 共用：把 PREDICTION_MODIFIERS 应用到一个基础区间上 ----
+  function applyModifiers(baseMin, baseMax, tags){
+    let min = baseMin, max = baseMax;
+    const reasons = [];
+    loadModifiers().forEach(mod => {
+      if (mod.enabled === false) return;
+      const triggers = mod.triggers || [];
+      if (triggers.length && triggers.every(t => tags.includes(t))) {
+        min += (mod.adjustMin || 0);
+        max += (mod.adjustMax || 0);
+        if (mod.reason) reasons.push(mod.reason);
+      }
+    });
+    return { min, max, reasons };
+  }
+
+  // ---- 判断本次是数据是否足够支撑"行为复盘" ----
+  function hasBehaviorData(record){
+    const mealsAny = Object.values(record.meals || {}).some(v => v && String(v).trim());
+    return !!(mealsAny || (record.exercise_text && record.exercise_text.trim()) ||
+      record.bowel.status || record.medication.semaglutide_using ||
+      (record.special.selected && record.special.selected.length) ||
+      (record.bodyFeel.selected && record.bodyFeel.selected.length) ||
+      (record.subjective.note && record.subjective.note.trim()));
+  }
+
+  // ---- 三种模式判断 ----
+  // review：今日、昨日体重都有 → 已经知道实际变化，做"复盘"而不是"预测"
+  // prediction：今日体重为空，但有饮食/运动/睡眠/排便/药物/主观感受等数据 → 做"预测"
+  // basic：体重数据不完整，行为数据也不够 → 只做基础行为复盘，不算体重
+  function determineAnalysisMode(record){
+    const hasToday = record.weight.today_kg != null;
+    const hasYesterday = record.weight.yesterday_kg != null;
+    if (hasToday && hasYesterday) return 'review';
+    if (!hasToday && hasBehaviorData(record)) return 'prediction';
+    return 'basic';
+  }
+
+  // ---- predictWeightChange（预测模式专用，本地规则，不依赖AI）----
+  function predictWeightChange(record, matchedRulesResult){
+    const top = matchedRulesResult.topMatchedRules;
+    const tags = record.tags || [];
+    let baseMin, baseMax;
+    const reasons = [];
+    if (top.length && top[0].matchScore >= 0.4 && top[0].expectedWeightChange) {
+      baseMin = top[0].expectedWeightChange.min; baseMax = top[0].expectedWeightChange.max;
+      reasons.push(top[0].title + '：' + top[0].explanation);
+    } else {
+      baseMin = -0.3; baseMax = 0.3;
+      reasons.push('暂无强匹配规则，给出保守波动范围。');
+    }
+
+    const adjusted = applyModifiers(baseMin, baseMax, tags);
+    let { min, max } = adjusted;
+    reasons.push(...adjusted.reasons);
+
+    let direction;
+    if (max < 0) direction = '可能下降';
+    else if (min > 0.2) direction = '可能小幅上涨';
+    else if ((max - min) > 1) direction = '波动较大';
+    else direction = '可能维持';
+
+    const fatGainLikely = (tags.includes('体重上涨') && !tags.includes('高钠') && !tags.includes('女性周期水分波动') && !tags.includes('便秘')) ? 'medium' : 'low';
+    let confidence = top.length && top[0].matchScore >= 0.7 ? 'high' : (top.length && top[0].matchScore >= 0.4 ? 'medium' : 'low');
+
+    // 饮食数据（早/午/晚/零食）全部为空时，即使规则匹配度很高，也不给满分置信度——
+    // 因为预测方向可能对，但当天完全没有饮食输入，数据不完整。
+    const meals = record.meals || {};
+    const mealsAllEmpty = ['breakfast','lunch','dinner','snack'].every(k => !meals[k] || !String(meals[k]).trim());
+    if (mealsAllEmpty && confidence === 'high') {
+      confidence = 'medium-high';
+      reasons.push('今天没有填写饮食记录，方向可能正确，但置信度打了折扣。');
+    }
+
+    return {
+      predictedMin: Math.round(min*10)/10, predictedMax: Math.round(max*10)/10,
+      direction, reasons, confidence, fatGainLikelihood: fatGainLikely, note:'预测仅供参考，不是精确承诺。'
+    };
+  }
+
+  // ---- buildWeightAnalysis（复盘模式专用：体重变化已发生，不是预测）----
+  // ---- 根据当天实际数据，拼出比规则自带 mainCauses 更具体的解释 ----
+  function describeSpecificCauses(record, topRule){
+    const tags = record.tags || [];
+    const points = [];
+    if (tags.includes('力量训练')) points.push('力量训练增加了热量消耗');
+    else if (record.exercise_text && record.exercise_text.trim()) points.push('今天有运动，带来了额外消耗');
+    if (record.bowel.status === '正常') points.push('排便正常，没有明显胃肠内容物堆积');
+    if (!tags.includes('腹胀') && !tags.includes('便秘')) points.push('没有出现腹胀或便秘等短期水钠潴留信号');
+    if (record.menstrual_status && !['经期','经前'].includes(record.menstrual_status)) points.push('不在经期/经前水分波动期');
+    if (tags.includes('高蛋白达标')) points.push('蛋白质摄入达标，有助于维持肌肉');
+    if (!tags.includes('高钠') && !tags.includes('加工食品')) points.push('没有明显高钠/加工食品摄入迹象');
+    if (points.length) return points;
+    return (topRule && topRule.mainCauses) || [];
+  }
+
+  function buildWeightAnalysis(record, matchedRulesResult){
+    const top = matchedRulesResult.topMatchedRules;
+    const tags = record.tags || [];
+    const actualChangeKg = record.weight.change_kg;
+
+    let direction = '持平';
+    if (actualChangeKg > 0) direction = '上涨';
+    else if (actualChangeKg < 0) direction = '下降';
+
+    let ruleExpectedRange = {};
+    const mostLikelyCauses = [];
+    let explanation = '';
+    if (top.length && top[0].matchScore >= 0.4 && top[0].expectedWeightChange) {
+      const adjusted = applyModifiers(top[0].expectedWeightChange.min, top[0].expectedWeightChange.max, tags);
+      ruleExpectedRange = { min: Math.round(adjusted.min*10)/10, max: Math.round(adjusted.max*10)/10 };
+      const causes = describeSpecificCauses(record, top[0]);
+      mostLikelyCauses.push(...causes);
+      explanation = top[0].title + '：' + top[0].explanation;
+      if (adjusted.reasons.length) explanation += '（' + adjusted.reasons.join('；') + '）';
+      if (causes.length && causes !== top[0].mainCauses) {
+        explanation += ' 具体来看：' + causes.join('，') + '。体重变化更可能来自行为累积加上短期水分/消化内容物的正常波动，不代表单一因素决定的结果。';
+      }
+    } else {
+      explanation = '暂无强匹配规则，无法给出理论波动范围作为参考，仅按标签给出方向性解释。';
+    }
+
+    let isNormalFluctuation = true;
+    if (ruleExpectedRange.min != null && actualChangeKg != null) {
+      isNormalFluctuation = actualChangeKg >= ruleExpectedRange.min && actualChangeKg <= ruleExpectedRange.max;
+    }
+
+    const fatGainLikelihood = (tags.includes('体重上涨') && !tags.includes('高钠') && !tags.includes('女性周期水分波动') && !tags.includes('便秘')) ? 'medium' : 'low';
+
+    return {
+      actualChangeKg, direction, mostLikelyCauses, matchedRules: top,
+      ruleExpectedRange, fatGainLikelihood, isNormalFluctuation, explanation
+    };
+  }
+
+  // ---- buildValidation（用今天的实际体重，只读地对照昨天存下的预测——不自动更新规则准确率）----
+  function buildValidation(record, history){
+    const prev = history && history[0];
+    if (!prev || !prev.nextWeightPrediction || prev.nextWeightPrediction.predictedMin == null || record.weight.change_kg == null) {
+      return { previousPredictionExists:false, matched:null, previousPredictedRange:{}, actualChangeKg: record.weight.change_kg };
+    }
+    const range = { min: prev.nextWeightPrediction.predictedMin, max: prev.nextWeightPrediction.predictedMax };
+    const matched = record.weight.change_kg >= range.min && record.weight.change_kg <= range.max;
+    return { previousPredictionExists:true, matched, previousPredictedRange: range, actualChangeKg: record.weight.change_kg };
+  }
+
+  // ---- 渲染：规则匹配 / 预测 ----
+  function renderRuleMatches(result){
+    const area = $('ruleMatchesArea');
+    area.innerHTML = '<span class="row-label" style="margin-top:14px;display:block;">🔍 规则匹配 Top 3</span>';
+    if (result.note) area.innerHTML += `<div class="hint">${escapeHtml(result.note)}</div>`;
+    result.topMatchedRules.forEach(r => {
+      const card = document.createElement('div');
+      card.className = 'rule-card';
+      card.innerHTML = `
+        <div class="rule-title">${escapeHtml(r.title)} · ${Math.round(r.matchScore*100)}%</div>
+        <div class="rule-score-bar"><div class="rule-score-fill" style="width:${Math.round(r.matchScore*100)}%;"></div></div>
+        <div>命中：${r.matchedTriggers.map(escapeHtml).join('、') || '无'}</div>
+        <div class="rule-meta">缺失：${r.missingTriggers.map(escapeHtml).join('、') || '无'}</div>
+        <div style="margin-top:6px;">${escapeHtml(r.explanation)}</div>
+        <div style="margin-top:4px;"><b>建议：</b>${escapeHtml(r.suggestion)}</div>
+        <div class="rule-meta" style="margin-top:6px;">当前准确率：${r.currentAccuracy != null ? r.currentAccuracy + '%' : '暂无数据（v1.5 暂不自动统计）'}</div>
+      `;
+      area.appendChild(card);
+    });
+  }
+  function renderPrediction(pred){
+    const area = $('predictionArea');
+    area.innerHTML = `
+      <div class="prediction-card">
+        <div style="font-weight:700;margin-bottom:6px;">📊 下一次称重预测</div>
+        <div>预计范围：${pred.predictedMin} ~ ${pred.predictedMax} kg（${escapeHtml(pred.direction)}）</div>
+        <div>置信度：${pred.confidence} ｜ 脂肪增加可能性：${pred.fatGainLikelihood}</div>
+        <ul style="margin:8px 0 0;padding-left:18px;">${pred.reasons.map(r => `<li>${escapeHtml(r)}</li>`).join('')}</ul>
+        <div class="hint" style="margin-top:6px;">${escapeHtml(pred.note)}</div>
+      </div>
+    `;
+  }
+  function renderWeightAnalysis(wa, validation){
+    const area = $('predictionArea');
+    const rangeText = wa.ruleExpectedRange && wa.ruleExpectedRange.min != null
+      ? `${wa.ruleExpectedRange.min} ~ ${wa.ruleExpectedRange.max} kg` : '暂无（无强匹配规则）';
+    let validationLine = '';
+    if (validation && validation.previousPredictionExists) {
+      validationLine = `<div class="hint" style="margin-top:8px;">对照昨天的预测：${validation.previousPredictedRange.min} ~ ${validation.previousPredictedRange.max} kg，实际变化 ${validation.actualChangeKg} kg → ${validation.matched ? '✓ 落在预测范围内' : '✕ 超出了预测范围'}</div>`;
+    }
+    area.innerHTML = `
+      <div class="prediction-card">
+        <div style="font-weight:700;margin-bottom:6px;">📈 体重变化复盘</div>
+        <div>实际变化：${wa.actualChangeKg} kg（${escapeHtml(wa.direction)}）</div>
+        <div>规则理论波动范围：${rangeText} ｜ 是否属于正常波动：${wa.isNormalFluctuation ? '是' : '否，超出常见范围'}</div>
+        <div>脂肪增加可能性：${wa.fatGainLikelihood}</div>
+        ${wa.mostLikelyCauses.length ? `<div style="margin-top:6px;"><b>最可能的原因：</b>${wa.mostLikelyCauses.map(escapeHtml).join('、')}</div>` : ''}
+        <div style="margin-top:6px;">${escapeHtml(wa.explanation)}</div>
+        ${validationLine}
+      </div>
+    `;
+  }
+  function renderBasicNotice(){
+    const area = $('predictionArea');
+    area.innerHTML = `
+      <div class="prediction-card">
+        <div style="font-weight:700;margin-bottom:6px;">📋 行为复盘</div>
+        <div>今天的体重数据不完整（今日/昨日体重缺失），本次不做体重变化分析或预测，只根据你填写的行为数据做复盘。</div>
+      </div>
+    `;
+  }
+
+  // ---- AI 复盘（简单版，不强制JSON结构）----
+  async function callSimpleAIReview(record, matchedRulesResult){
+    const model = modelInput.value.trim();
+    const mode = record.analysisMode;
+    let modeInstruction, userPayload;
+    if (mode === 'review') {
+      modeInstruction = '这次是"复盘模式"：体重变化已经实际发生（今天和昨天的体重都有记录），请针对已发生的变化做解释，不要说成"预测"或"接下来会怎样"。';
+      userPayload = { mode, record, tags: record.tags, matchedRules: matchedRulesResult.topMatchedRules, weightAnalysis: record.weightAnalysis, validation: record.validation };
+    } else if (mode === 'prediction') {
+      modeInstruction = '这次是"预测模式"：今天还没有称重，请基于已有的饮食/运动/睡眠等数据，对下一次称重可能出现的变化给出解释，明确这是预测、还没发生。';
+      userPayload = { mode, record, tags: record.tags, matchedRules: matchedRulesResult.topMatchedRules, nextWeightPrediction: record.nextWeightPrediction };
+    } else {
+      modeInstruction = '这次是"行为复盘模式"：体重数据不完整，不做体重变化分析或预测，只针对饮食/运动/睡眠/主观感受等行为数据做复盘和建议。';
+      userPayload = { mode, record, tags: record.tags };
+    }
+    const systemPrompt = `你是一位有同理心的健康管理助手，帮助用户回顾体重管理相关的一天。
+${modeInstruction}
+语言要求：不要批评用户，不要制造焦虑，不要说"你胖了"；体重上涨先解释可能原因（不要默认是脂肪增加）；体重下降也要分析哪些行为值得保持；建议要具体可执行；不做医学诊断，不建议极端节食。
+如果方便，尽量按如下几个部分组织（可以用简单的小标题），但不强制严格JSON格式：总体总结 / 可能的原因 / 做得好的地方 / 明天的建议。`;
+    const content = await callChatAPI({ text: JSON.stringify(userPayload), model, systemPrompt });
+    return content;
+  }
+  function renderAIReview(rawText){
+    const area = $('aiReviewArea');
+    const parsed = safeJsonParse(rawText);
+    const div = document.createElement('div');
+    div.className = 'note';
+    if (parsed && (parsed.summary || parsed.highlights || parsed.suggestions || parsed.what_went_well)) {
+      let html = '<h3>📝 AI 复盘</h3>';
+      if (parsed.summary) html += `<div class="note-block"><p>${escapeHtml(parsed.summary)}</p></div>`;
+      const wellList = parsed.what_went_well || parsed.highlights;
+      if (wellList && wellList.length) html += `<div class="note-block"><b>做得好的地方</b><ul>${wellList.map(x=>`<li>${escapeHtml(x)}</li>`).join('')}</ul></div>`;
+      const improveList = parsed.what_to_improve || parsed.concerns;
+      if (improveList && improveList.length) html += `<div class="note-block"><b>需要关注</b><ul>${improveList.map(x=>`<li>${escapeHtml(x)}</li>`).join('')}</ul></div>`;
+      if (parsed.suggestions && parsed.suggestions.length) html += `<div class="note-block"><b>明天建议</b><ul>${parsed.suggestions.map(x=>`<li>${escapeHtml(x)}</li>`).join('')}</ul></div>`;
+      div.innerHTML = html;
+    } else {
+      div.innerHTML = `<h3>📝 AI 复盘</h3><div class="note-block"><p>${escapeHtml(rawText)}</p></div>`;
+    }
+    area.innerHTML = '';
+    area.appendChild(div);
+  }
+
+  // ---- 历史记录 ----
+  function loadHistory(){
+    try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch(e){ return []; }
+  }
+  function saveHistoryList(list){
+    try { localStorage.setItem(HISTORY_KEY, JSON.stringify(list)); } catch(e){}
+  }
+  function saveHistoryEntry(record){
+    const list = loadHistory();
+    list.unshift(record);
+    if (list.length > MAX_HISTORY) list.length = MAX_HISTORY;
+    saveHistoryList(list);
+    renderHistory();
+  }
+  function deleteHistoryEntry(id){
+    saveHistoryList(loadHistory().filter(x => x.id !== id));
+    renderHistory();
+  }
+  function renderHistory(){
+    const list = loadHistory();
+    $('histCount').textContent = list.length;
+    drawSparkline(list);
+    const histList = $('histList');
+    if (list.length === 0) { histList.innerHTML = '<div class="hist-empty">还没有历史记录，生成一次复盘试试～</div>'; return; }
+    histList.innerHTML = '';
+    list.forEach(entry => {
+      const item = document.createElement('div');
+      item.className = 'hist-item';
+      const w = entry.weight && entry.weight.today_kg != null ? entry.weight.today_kg + ' kg' : '--';
+      const tagsHtml = (entry.tags||[]).slice(0,6).map(t => `<span>${escapeHtml(t)}</span>`).join('');
+      item.innerHTML = `
+        <div class="hist-top">
+          <span class="hist-date">${escapeHtml(entry.date||'')}</span>
+          <span class="hist-weight">${w}</span>
+          <button class="hist-del" title="删除">✕</button>
+        </div>
+        <div class="hist-tags">${tagsHtml}</div>
+        <div class="hist-detail">${escapeHtml((entry.aiReviewRaw||'').slice(0,300))}</div>
+      `;
+      item.querySelector('.hist-top').addEventListener('click', e => {
+        if (e.target.closest('.hist-del')) return;
+        item.querySelector('.hist-detail').classList.toggle('open');
+      });
+      item.querySelector('.hist-del').addEventListener('click', () => deleteHistoryEntry(entry.id));
+      histList.appendChild(item);
+    });
+  }
+  function drawSparkline(list){
+    const canvas = $('sparkline');
+    const ctx = canvas.getContext('2d');
+    const w = canvas.clientWidth || 400, h = 60;
+    canvas.width = w; canvas.height = h;
+    ctx.clearRect(0,0,w,h);
+    const points = list.slice(0,14).reverse().map(e => e.weight && e.weight.today_kg).filter(v => v != null && !isNaN(v));
+    if (points.length < 2) return;
+    const min = Math.min(...points), max = Math.max(...points), range = (max-min)||1;
+    const stepX = w/(points.length-1);
+    ctx.beginPath();
+    points.forEach((v,i) => {
+      const x = i*stepX, y = h-8-((v-min)/range)*(h-16);
+      if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    });
+    ctx.strokeStyle = '#2c5b86'; ctx.lineWidth = 2; ctx.stroke();
+    points.forEach((v,i) => {
+      const x = i*stepX, y = h-8-((v-min)/range)*(h-16);
+      ctx.beginPath(); ctx.arc(x,y,2.5,0,Math.PI*2); ctx.fillStyle = '#2c5b86'; ctx.fill();
+    });
+  }
+  $('clearHistBtn').addEventListener('click', () => { saveHistoryList([]); renderHistory(); });
+
+  // ---- 复制今日数据给 ChatGPT ----
+  function buildCopyText(record, matchedRulesResult){
+    const mode = record.analysisMode;
+    const title = mode === 'review' ? '【体重变化复盘数据】'
+      : mode === 'prediction' ? '【下一次称重预测数据】'
+      : '【行为复盘数据（体重数据不足）】';
+
+    let sectionSix, questions;
+    if (mode === 'review') {
+      const wa = record.weightAnalysis || {};
+      const rangeText = wa.ruleExpectedRange && wa.ruleExpectedRange.min != null ? `${wa.ruleExpectedRange.min} ~ ${wa.ruleExpectedRange.max} kg` : '暂无';
+      sectionSix = `六、体重变化复盘
+actual_change: ${wa.actualChangeKg} kg，方向：${wa.direction}
+rule_expected_range: ${rangeText}
+is_normal_fluctuation: ${wa.isNormalFluctuation}
+fat_gain_likelihood: ${wa.fatGainLikelihood}
+most_likely_causes: ${(wa.mostLikelyCauses||[]).join('、')}`;
+      questions = `【请帮我分析】
+1. 今天体重变化最可能是什么原因？
+2. 哪条规则最吻合？
+3. 这次变化是否属于正常波动？
+4. 现有规则是否需要优化？
+5. 明天饮食和运动怎么安排？`;
+    } else if (mode === 'prediction') {
+      const p = record.nextWeightPrediction || {};
+      sectionSix = `六、下一次称重预测
+predicted: ${p.predictedMin} ~ ${p.predictedMax} kg，方向：${p.direction}，置信度：${p.confidence}`;
+      questions = `【请帮我分析】
+1. 下一次体重可能怎么变化？
+2. 预测依据是什么？
+3. 哪条规则最吻合？
+4. 预测范围是否合理？
+5. 明天需要注意什么？`;
+    } else {
+      sectionSix = `六、体重数据
+今日/昨日体重不完整，本次不做体重变化分析或预测。`;
+      questions = `【请帮我分析】
+1. 从这些行为数据里能看出什么模式？
+2. 有没有需要留意的地方？
+3. 明天饮食和运动怎么安排？`;
+    }
+
+    return `${title}
+
+一、基础信息
+date: ${record.date}
+today_weight: ${record.weight.today_kg}
+yesterday_weight: ${record.weight.yesterday_kg}
+weight_change: ${record.weight.change_kg}
+
+二、原始输入
+breakfast: ${record.meals.breakfast}
+lunch: ${record.meals.lunch}
+dinner: ${record.meals.dinner}
+snack: ${record.meals.snack}
+exercise_text: ${record.exercise_text}
+sleep: ${record.sleep.start} - ${record.sleep.end}（${record.sleep.duration_min || '?'}分钟）
+bowel: ${record.bowel.status}
+medication: ${record.medication.raw}｜司美格鲁肽: ${record.medication.semaglutide_using}｜剂量: ${record.medication.semaglutide_dose}
+menstrual_status: ${record.menstrual_status}
+special_notes: ${record.special.selected.join('、')}${record.special.note ? '；' + record.special.note : ''}
+body_feel: ${record.bodyFeel.selected.join('、')}${record.bodyFeel.note ? '；' + record.bodyFeel.note : ''}
+
+三、主观评分
+hunger_score: ${record.subjective.hunger_score}
+appetite_score: ${record.subjective.appetite_score}
+nausea_score: ${record.subjective.nausea_score}
+bloating_score: ${record.subjective.bloating_score}
+constipation_score: ${record.subjective.constipation_score}
+fatigue_score: ${record.subjective.fatigue_score}
+knee_pain_score: ${record.subjective.knee_pain_score}
+
+四、自动标签
+tags: ${(record.tags||[]).join('、')}
+
+五、规则匹配
+${(matchedRulesResult.topMatchedRules||[]).map(r => `- ${r.title}（匹配度${Math.round(r.matchScore*100)}%）：${r.explanation}`).join('\n')}
+
+${sectionSix}
+
+${questions}`;
+  }
+  async function copyToClipboard(text){
+    try { await navigator.clipboard.writeText(text); return true; }
+    catch(e){
+      const ta = document.createElement('textarea');
+      ta.value = text; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); document.body.removeChild(ta); return true; }
+      catch(e2){ document.body.removeChild(ta); return false; }
+    }
+  }
+  $('copyChatGPTBtn').addEventListener('click', async () => {
+    const record = collectRawRecord();
+    record.tags = recomputeTags(record);
+    const mode = determineAnalysisMode(record);
+    record.analysisMode = mode;
+    let matched = { topMatchedRules: [], note:'' };
+    if (mode === 'review') {
+      matched = matchRules(record, getAllRulesArr());
+      record.weightAnalysis = buildWeightAnalysis(record, matched);
+    } else if (mode === 'prediction') {
+      matched = matchRules(record, getAllRulesArr());
+      record.nextWeightPrediction = predictWeightChange(record, matched);
+    }
+    const text = buildCopyText(record, matched);
+    const ok = await copyToClipboard(text);
+    showTempStatus($('copyChatGPTBtn'), ok ? '已复制 ✓' : '复制失败');
+  });
+  function getAllRulesArr(){ return loadRules(); }
+  function showTempStatus(btn, msg){
+    const original = btn.textContent;
+    btn.textContent = msg;
+    setTimeout(() => { btn.textContent = original; }, 1600);
+  }
+
+  // ---- 导出 JSON ----
+  $('exportJsonBtn').addEventListener('click', () => {
+    const record = collectRawRecord();
+    record.tags = recomputeTags(record);
+    record.analysisMode = determineAnalysisMode(record);
+    const data = {
+      exportedAt: new Date().toISOString(),
+      history: loadHistory(),
+      reviewRules: loadRules(),
+      tagRules: loadTagRules(),
+      predictionModifiers: loadModifiers(),
+      candidateRules: loadCandidateRules(),
+      currentRecord: record
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `body-review-export-${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  // ---- 规则库管理：导出 / 导入 / 复制给ChatGPT / 恢复默认 ----
+  function downloadJSON(obj, filename){
+    const blob = new Blob([JSON.stringify(obj, null, 2)], { type:'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+  $('exportRulesBtn').addEventListener('click', () => {
+    downloadJSON(loadRules(), `body-review-rules-${new Date().toISOString().slice(0,10)}.json`);
+  });
+  $('copyRulesBtn').addEventListener('click', async () => {
+    const ok = await copyToClipboard(JSON.stringify(loadRules(), null, 2));
+    showTempStatus($('copyRulesBtn'), ok ? '已复制 ✓' : '复制失败');
+  });
+  $('resetRulesBtn').addEventListener('click', () => {
+    if (!confirm('确定要恢复默认规则库吗？这会清除你对规则库做过的所有修改/导入，此操作不可撤销。')) return;
+    localStorage.removeItem(RULES_KEY);
+    initDefaultRules();
+    refreshRuleCount();
+    alert('已恢复为默认规则库（内置默认规则）。');
+  });
+  $('importRulesBtn').addEventListener('click', () => $('importRulesFile').click());
+  $('importRulesFile').addEventListener('change', () => {
+    const file = $('importRulesFile').files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      let incoming;
+      try { incoming = JSON.parse(reader.result); }
+      catch(e){ alert('导入失败：文件不是合法的 JSON。'); $('importRulesFile').value=''; return; }
+      const check = validateRulesArray(incoming);
+      if (!check.valid) {
+        alert('导入失败，规则库格式不正确，现有规则库未被修改：\n' + check.error);
+        $('importRulesFile').value = '';
+        return;
+      }
+      const doMerge = confirm(`校验通过，共 ${incoming.length} 条规则。\n点击"确定"= 合并导入（按 id 更新/新增，保留你现有其他规则）\n点击"取消"= 覆盖导入（用导入文件完全替换当前规则库）`);
+      const current = loadRules();
+      if (doMerge) {
+        saveRules(mergeRulesList(current, incoming));
+        alert('合并导入完成。');
+      } else {
+        const now = new Date().toISOString();
+        saveRules(incoming.map(r => normalizeRule(r, now)));
+        alert('覆盖导入完成。');
+      }
+      refreshRuleCount();
+      $('importRulesFile').value = '';
+    };
+    reader.readAsText(file);
+  });
+
+  // ---- TAG_RULES 管理：导出 / 导入 / 复制 / 恢复默认 ----
+  $('exportTagRulesBtn').addEventListener('click', () => {
+    downloadJSON(loadTagRules(), `body-review-tag-rules-${new Date().toISOString().slice(0,10)}.json`);
+  });
+  $('copyTagRulesBtn').addEventListener('click', async () => {
+    const ok = await copyToClipboard(JSON.stringify(loadTagRules(), null, 2));
+    showTempStatus($('copyTagRulesBtn'), ok ? '已复制 ✓' : '复制失败');
+  });
+  $('resetTagRulesBtn').addEventListener('click', () => {
+    if (!confirm('确定要恢复默认标签规则吗？这会清除你对 TAG_RULES 做过的所有修改/导入，此操作不可撤销。')) return;
+    localStorage.removeItem(TAGRULES_KEY);
+    initDefaultTagRules();
+    refreshRuleCount();
+    alert('已恢复为默认标签规则。');
+  });
+  $('importTagRulesBtn').addEventListener('click', () => $('importTagRulesFile').click());
+  $('importTagRulesFile').addEventListener('change', () => {
+    const file = $('importTagRulesFile').files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      let incoming;
+      try { incoming = JSON.parse(reader.result); }
+      catch(e){ alert('导入失败：文件不是合法的 JSON。'); $('importTagRulesFile').value=''; return; }
+      const check = validateTagRulesArray(incoming);
+      if (!check.valid) {
+        alert('导入失败，TAG_RULES 格式不正确，现有标签规则未被修改：\n' + check.error);
+        $('importTagRulesFile').value = '';
+        return;
+      }
+      const doMerge = confirm(`校验通过，共 ${incoming.length} 条标签规则。\n点击"确定"= 合并导入（按 id 更新/新增）\n点击"取消"= 覆盖导入（完全替换）`);
+      const current = loadTagRules();
+      if (doMerge) { saveTagRules(mergeTagRules(current, incoming)); alert('合并导入完成。'); }
+      else { saveTagRules(incoming); alert('覆盖导入完成。'); }
+      refreshRuleCount();
+      $('importTagRulesFile').value = '';
+    };
+    reader.readAsText(file);
+  });
+
+  // ---- PREDICTION_MODIFIERS 管理：导出 / 导入 / 复制 / 恢复默认 ----
+  $('exportModifiersBtn').addEventListener('click', () => {
+    downloadJSON(loadModifiers(), `body-review-prediction-modifiers-${new Date().toISOString().slice(0,10)}.json`);
+  });
+  $('copyModifiersBtn').addEventListener('click', async () => {
+    const ok = await copyToClipboard(JSON.stringify(loadModifiers(), null, 2));
+    showTempStatus($('copyModifiersBtn'), ok ? '已复制 ✓' : '复制失败');
+  });
+  $('resetModifiersBtn').addEventListener('click', () => {
+    if (!confirm('确定要恢复默认预测修正规则吗？此操作不可撤销。')) return;
+    localStorage.removeItem(MODIFIERS_KEY);
+    initDefaultModifiers();
+    refreshRuleCount();
+    alert('已恢复为默认预测修正规则。');
+  });
+  $('importModifiersBtn').addEventListener('click', () => $('importModifiersFile').click());
+  $('importModifiersFile').addEventListener('change', () => {
+    const file = $('importModifiersFile').files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      let incoming;
+      try { incoming = JSON.parse(reader.result); }
+      catch(e){ alert('导入失败：文件不是合法的 JSON。'); $('importModifiersFile').value=''; return; }
+      const check = validateModifiersArray(incoming);
+      if (!check.valid) {
+        alert('导入失败，PREDICTION_MODIFIERS 格式不正确，现有修正规则未被修改：\n' + check.error);
+        $('importModifiersFile').value = '';
+        return;
+      }
+      const doMerge = confirm(`校验通过，共 ${incoming.length} 条修正规则。\n点击"确定"= 合并导入（按 id 更新/新增）\n点击"取消"= 覆盖导入（完全替换）`);
+      const current = loadModifiers();
+      if (doMerge) { saveModifiers(mergeModifiers(current, incoming)); alert('合并导入完成。'); }
+      else { saveModifiers(incoming); alert('覆盖导入完成。'); }
+      refreshRuleCount();
+      $('importModifiersFile').value = '';
+    };
+    reader.readAsText(file);
+  });
+
+  // ---- 生成复盘（主流程）----
+  $('generateBtn').addEventListener('click', async () => {
+    clearError();
+    $('aiReviewArea').innerHTML = '';
+    const btn = $('generateBtn');
+
+    const record = collectRawRecord();
+    record.tags = recomputeTags(record);
+    renderTags();
+
+    const mode = determineAnalysisMode(record);
+    record.analysisMode = mode;
+    let matched = { topMatchedRules: [], note:'' };
+
+    if (mode === 'review') {
+      matched = matchRules(record, getAllRulesArr());
+      record.matchedRules = matched.topMatchedRules;
+      record.weightAnalysis = buildWeightAnalysis(record, matched);
+      record.validation = buildValidation(record, loadHistory());
+      renderRuleMatches(matched);
+      renderWeightAnalysis(record.weightAnalysis, record.validation);
+    } else if (mode === 'prediction') {
+      matched = matchRules(record, getAllRulesArr());
+      record.matchedRules = matched.topMatchedRules;
+      record.nextWeightPrediction = predictWeightChange(record, matched);
+      renderRuleMatches(matched);
+      renderPrediction(record.nextWeightPrediction);
+    } else {
+      $('ruleMatchesArea').innerHTML = '';
+      renderBasicNotice();
+    }
+
+    const apiKey = apiKeyInput.value.trim();
+    if (!apiKey) {
+      showError('本地分析已生成。如果想让 AI 也生成一段文字复盘，请先在下方「AI 接口设置」中填好 API Key。');
+      record.id = 'record_' + Date.now();
+      saveHistoryEntry(record);
+      return;
+    }
+
+    btn.disabled = true; btn.textContent = '生成中...';
+    try {
+      const aiText = await callSimpleAIReview(record, matched);
+      record.aiReviewRaw = aiText;
+      renderAIReview(aiText);
+    } catch (err) {
+      console.error(err);
+      showError('AI 复盘生成失败（本地分析结果已保留）：' + err.message);
+    } finally {
+      btn.disabled = false; btn.textContent = '► 生成复盘';
+      record.id = 'record_' + Date.now();
+      saveHistoryEntry(record);
+    }
+  });
+
+  // ---- 初始化 ----
+  (function initEntryNo(){
+    $('entryNo').textContent = String(loadHistory().length + 1).padStart(3,'0');
+  })();
+  renderHistory();
+  refreshLcd();
+  highlightPreset();
+  refreshRuleCount();
+</script>
+</body>
+</html>
